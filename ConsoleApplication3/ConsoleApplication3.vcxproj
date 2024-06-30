@@ -128,13 +128,22 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ConsoleApplication3.cpp" />
+    <ClCompile Include="적.cpp" />
+    <ClCompile Include="플레이어.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="렌더.h" />
+    <ClInclude Include="메인.h" />
+    <ClInclude Include="뮤직.h" />
     <ClInclude Include="유닛.h" />
     <ClInclude Include="유닛메니저.h" />
+    <ClInclude Include="적.h" />
     <ClInclude Include="텍스트.h" />
     <ClInclude Include="텍스트메니저.h" />
+    <ClInclude Include="플레이어.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="배달의민족 - 미래도시라솔파.mp3" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

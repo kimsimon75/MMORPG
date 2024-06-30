@@ -18,6 +18,12 @@
     <ClCompile Include="ConsoleApplication3.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="플레이어.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="적.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="유닛.h">
@@ -35,5 +41,22 @@
     <ClInclude Include="유닛메니저.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="플레이어.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="적.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="메인.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="뮤직.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="배달의민족 - 미래도시라솔파.mp3">
+      <Filter>리소스 파일</Filter>
+    </Media>
   </ItemGroup>
 </Project>

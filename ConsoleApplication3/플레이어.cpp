@@ -1,9 +1,10 @@
+#pragma once
 #include "플레이어.h"
 #include "적.h"
 
 class Enemy;
 
-void Player::basic_Attack(Unit& target)
+pair<bool, int> Player::basic_Attack(Unit& target)
 {
 	if (playerNumber == 4)
 	{
@@ -19,4 +20,5 @@ void Player::basic_Attack(Unit& target)
 			damage = 0;
 		target.current_hp -= (damage);
 	}
+	return make_pair(0, 0);
 }

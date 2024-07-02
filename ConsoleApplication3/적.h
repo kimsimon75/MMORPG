@@ -1,3 +1,4 @@
+#pragma once
 #ifndef _UNIT_
 #define _UNIT_
 #include "РЏДж.h"

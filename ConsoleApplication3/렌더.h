@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <mmsystem.h>
+#include <thread>
 #include "텍스트.h"
 #include "유닛메니저.h"
 #include "뮤직.h"
@@ -12,247 +12,353 @@
 using namespace std;
 #pragma comment(lib,"winmm.lib")
 
-using Func = void(Player::*)(Unit&);
+using Func = pair<bool,int>(Player::*)(Unit&);
+COORD boy;
 
-class Data {
 
+struct Data {
+	static COORD pos ;
+
+	static int button_x;
+	static int state;
+	static int alertCount;
+	static short keyInput;
+	static short maxCount;
+	static short currentCount;
+	static int skillCount;
+	static int gameRound;
+	static bool skillOn;
+	static bool wtf;
+	static Func* skillSet;
+
+	void posinit()
+	{
+		pos.X = 0;
+		pos.Y = 0;
+	}
 };
-	COORD pos = { 0,0 };
 
-	int gameRound = 0;
+COORD Data::pos{ 0,0 };
+int Data::button_x = 1;
+int Data::state = 0;
+int Data::alertCount = 0;
+short Data::keyInput = 1;
+short Data::maxCount = 4;
+short Data::currentCount = 0;
+int Data::skillCount = 0;
+int Data::gameRound = 0;
+bool Data::skillOn = false;
+bool Data::wtf = false;
+Func* Data::skillSet = nullptr;
 
-	int button_x = 1;
-	int state = 0;
-	int alertCount = 0;
-	short keyInput = 1;
-	short maxCount = 4;
-	short currentCount = 0;
-	int skillCount = 0;
-	bool myTurn = false;
-	bool enemyTurn = false;
-	bool skillOn = false;
-	Func* skillSet = nullptr;
-
-	void text_center(const char* text)
-	{
-		pos.X = (106 - (int)strlen(text)) / 2;
-	}
-
-	void text_center(int& length)
-	{
-		pos.X = (106 - length) / 2;
-	}
-	void text_center(int& a, int& b, int& length)
-	{
-		pos.X = a + (b - a - length) / 2;
-	}
-
-	void line_center(int a, int b, int& line)
-	{
-		pos.Y = a +((b - a - line) / 2);
-	}
-
-
-	void Map()
-	{
-		system("cls");
-		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
-		for (int i = 0; i < 40; i++)
+	class Text_Align {
+	public:
+		static void text_center(const char* text)
 		{
-			printf("%s\n", map[i]);
+			Data::pos.X = (105 - (int)strlen(text)) / 2;
 		}
-	}
 
+		static void text_center(int length)
+		{
+			Data::pos.X = (105 - length) / 2;
+		}
 
+		static void text_center(int& a, int& b, int length)
+		{
+			Data::pos.X = a + (b - a - length) / 2;
+		}
 
-void Button()
-{
+		static void line_center(int a, int b, int line)
+		{
+			Data::pos.Y = a + ((b - a - line) / 2);
+		}
+	};
 	
-	if(state<=2)
-	for (int i =(alertCount==1)? 1 : 0; i < ((alertCount == 1) ? 3 : 4); i++)
-	{
-		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), (button_x == i+currentCount + 1) ? 14 : 15);
-		for (int j = 0; j < 5; j++)
+	class Renderer {
+	public:
+
+		static void Map()
 		{
-			pos.X = 6 + 24 * i;
-			pos.Y = 32 + j;
-			SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-			printf("%s\n", button[j]);
-		}
-	}
-
-}
-
-
-void Play()
-{
-	if(state<3)   
-	{
-		pos.Y = 34;
-		for (int i = (alertCount == 1) ? 1 : currentCount, init = i; i < ((alertCount == 1) ? 3 : (((skillOn) ? skillCount : maxCount) < 4) ? ((skillOn) ? skillCount : maxCount) : currentCount + 4); i++) // 버튼 텍스트 
-		{
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), (button_x == i + 1) ? 14 : 15);
-
-			int start = 8 + 24 * ((alertCount == 1) ? i : (i-init));
-			int end = 24 + 24 * ((alertCount == 1) ? i : (i - init));
-			int length = (int)strlen((alertCount == 1) ? alert[0][i] : ((skillOn) ? skills[UnitManager::Get()->returnPlayer().PN() - 1][i] : text[state][i]));
-			text_center(start, end, length);
-			SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-			printf("%s", (alertCount == 1) ? alert[0][i] : ((skillOn) ? skills[UnitManager::Get()->returnPlayer().PN()-1][i] : text[state][i]));
-		}
-		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
-
-		if(alertCount!=1)
-		{
-			if (currentCount > 0)
+			system("cls");
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
+			for (int i = 0; i < 40; i++)
 			{
-				pos.X = 2;
-				SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-				printf("<--");
-			}
-
-			if (currentCount + 4 < ((skillOn) ? skillCount : maxCount))
-			{
-				pos.X = 99;
-				SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-				printf("-->");
+				printf("%s\n", map[i]);
 			}
 		}
 
-	}
-}
-
-void Status()
-{
-	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 14);
-
-	if(state==2)
-	{
-		pos.X = 5;
-		pos.Y = 12;
-		for (int i = 0; i < 7; i++) // 스테이터스
+		static void Button()
 		{
-			int* p = (int*)&UnitManager::Get()->returnEnemy();
-			pos.Y += 2;
-			SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
+			{
 
-			if (i < 2)
-				printf("%s : %d / %d", unitInfo[i], p[i], p[i + 7]);
-			else
-				printf("%s : %d", unitInfo[i], p[i]);
+				if (Data::state <= 2 && Data::alertCount <= 1)
+					for (int k = 0; k < ((Data::state == 2) ? ((UnitManager::Get()->returnPlayer().GetDamage(false)) ? 4 : 1) : 1); k++)
+					{
+						if (Data::state == 2 && UnitManager::Get()->returnPlayer().GetDamage(false))
+						{
+							Map();
+							Status();
+						}
+
+						for (int i = (Data::alertCount) ? 1 : 0; i < ((Data::alertCount) ? 3 : 4); i++)
+						{
+							if (Data::state == 2 && UnitManager::Get()->returnPlayer().GetDamage(false))
+								SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 12);
+							else
+								SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), (Data::button_x == i + Data::currentCount + 1) ? 14 : 15);
+							for (int j = 0; j < 5; j++)
+							{
+								Data::pos.X = 6 + 24 * i;
+								Data::pos.Y = 32 + j;
+								int X = Data::pos.X;
+								if (Data::state == 2 && UnitManager::Get()->returnPlayer().GetDamage(false))
+									Data::pos.X = (k % 2 == 1) ? X - 2 : X + 2;
+								SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+								printf("%s\n", button[j]);
+							}
+						}
+						if (Data::state == 2 && UnitManager::Get()->returnPlayer().GetDamage(false))
+							Sleep(1000);
+					}
+				if (Data::state == 2)
+					UnitManager::Get()->returnPlayer().GetDamage(true);
+
+			}
+		}
+
+
+		static void Play()
+		{
+			if (Data::state < 3)
+			{
+				Data::pos.Y = 34;
+				if (Data::alertCount <= 1)
+					for (int i = (Data::alertCount == 1) ? 1 : Data::currentCount, init = i; i < ((Data::alertCount == 1) ? 3 : (((Data::skillOn) ? Data::skillCount : Data::maxCount) < 4) ? ((Data::skillOn) ? Data::skillCount : Data::maxCount) : Data::currentCount + 4); i++) // 버튼 텍스트 
+					{
+						SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), (Data::button_x == i + 1) ? 14 : 15);
+
+						int start = 8 + 24 * ((Data::alertCount == 1) ? i : (i - init));
+						int end = 24 + 24 * ((Data::alertCount == 1) ? i : (i - init));
+						int length = (int)strlen((Data::alertCount == 1) ? alert[0][i] : ((Data::skillOn) ? skills[UnitManager::Get()->returnPlayer().PN() - 1][i] : text[Data::state][i]));
+						Text_Align::text_center(start, end, length);
+						SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+						printf("%s", (Data::alertCount == 1) ? alert[0][i] : ((Data::skillOn) ? skills[UnitManager::Get()->returnPlayer().PN() - 1][i] : text[Data::state][i]));
+					}
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
+
+				if (!Data::alertCount)
+				{
+					if (Data::currentCount > 0)
+					{
+						Data::pos.X = 2;
+						SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+						printf("<--");
+					}
+
+					if (Data::currentCount + 4 < ((Data::skillOn) ? Data::skillCount : Data::maxCount))
+					{
+						Data::pos.X = 99;
+						SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+						printf("-->");
+					}
+				}
+				if (Data::state == 2)
+				{
+					Data::pos.Y = 30;
+					Text_Align::text_center("     / 100 | A  P |      / 100");
+					SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+					printf("     / 100 | A  P |      / 100");
+					Text_Align::text_center("     / 100 | A  P |      / 100");
+					SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+					printf("%d", UnitManager::Get()->returnEnemy().AP());
+					Text_Align::text_center("     / 100 | A  P |      / 100");
+					Data::pos.X += 20;
+					SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+					printf("%d", UnitManager::Get()->returnPlayer().AP());
+				}
+
+			}
+		}
+
+		static void Status()
+		{
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 14);
+
+			if (Data::state == 2)
+			{
+				Data::pos.X = 5;
+				Data::pos.Y = 12;
+				for (int i = 0; i < 7; i++) // 스테이터스
+				{
+					int* p = (int*)&UnitManager::Get()->returnEnemy();
+					Data::pos.Y += 2;
+					SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+
+					if (i == 0)
+						printf("%s : %d + %d / %d", unitInfo[i], p[i], p[i + 9], p[i + 7]);
+					else if (i == 1)
+						printf("%s : %d / %d", unitInfo[1], p[i], p[i + 7]);
+					else
+						printf("%s : %d", unitInfo[i], p[i]);
+
+				}
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
+			}
+			if (Data::state >= 2)
+			{
+				Data::pos.Y = 10;
+				Data::pos.X = 80;
+				SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+				printf("Round : %d", Data::gameRound + 1);
+			}
+			Data::pos.X = 60 + Data::state * 10;
+			Data::pos.Y = 12;
+
+			for (int i = 0; i < 7; i++)
+			{
+				Data::pos.Y += 2;
+				SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+				int* p = (int*)&UnitManager::Get()->returnPlayer();
+				if (i == 0)
+				{
+					if (!UnitManager::Get()->returnPlayer().BarrierCool())
+						printf("%s : %d / %d", unitInfo[i], p[i] + p[i + 9], p[i + 7]);
+					else
+					{
+						printf("%s : ", unitInfo[i]);
+						SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 14);
+						printf("%d + %d ", p[i], p[i + 9]);
+						SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
+						printf("/ %d", p[i + 7]);
+					}
+				}
+				else if (i == 1)
+					printf("%s : %d / %d", unitInfo[1], p[i], p[i + 7]);
+				else
+					printf("%s : %d", unitInfo[i], p[i]);
+			}
+
+
+
+			if (UnitManager::Get()->returnPlayer().PoisonTime())
+			{
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 10);
+				Data::pos.X = 6;
+				Data::pos.Y = 30;
+				SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+				printf("●%d", UnitManager::Get()->returnPlayer().PoisonTime());
+			}
+
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
+
 
 		}
-		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
-	}
 
-	pos.X = 65 + state * 10;
-	pos.Y = 12;
-
-		for (int i = 0; i < 7; i++)
+		static void SkillInformation()
 		{
-			pos.Y += 2;
-			SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-			int* p = (int*)&UnitManager::Get()->returnPlayer();
-			if (i < 2)
-				printf("%s : %d / %d", unitInfo[i], p[i], p[i + 7]);
-			else
-				printf("%s : %d", unitInfo[i], p[i]);
+			for (int i = 0; i < 4; i++) // 설명글
+			{
+				Data::pos.Y = 4 + i * 2;
+				Text_Align::text_center(skillinfo[UnitManager::Get()->returnPlayer().PN() - 1][Data::button_x - 1][i]);
+				SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+				printf("%s", skillinfo[UnitManager::Get()->returnPlayer().PN() - 1][Data::button_x - 1][i]);
+			}
+		}
+		
+	};
+
+
+	class Warning {
+	public:
+		static void GameOver()
+
+		{
+			char printf_temp[256];
+			FILE* rfp;
+			rfp = fopen("이미지\\게임오버.tmg", "rt"); // 그림 렌더
+			if (rfp == NULL)
+			{
+				printf("파일 불러오기에 실패했습니다.\n");
+				return;
+			}
+
+			int max = 0;
+			int line = 0;
+			while (fgets(printf_temp, 255, rfp) != NULL)
+			{
+				if (strlen(printf_temp) > max)
+				{
+
+					printf("%d %d", max, line);
+					max = (int)strlen(printf_temp);
+				}
+				line++;
+			}
+			fclose(rfp);
+			Text_Align::text_center(max);
+			Text_Align::line_center(-4, 41, line);
+			SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+			rfp = fopen("이미지\\게임오버.tmg", "rt");
+			while (fgets(printf_temp, 255, rfp) != NULL)
+			{
+				Data::pos.Y += 1;
+				SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+				printf(printf_temp);
+			}
+			puts("");
+			fclose(rfp);
+
+			Sleep(1500);
+			gameover = false;
+
+
 		}
 
-	if (state >= 2)
-	{
-		pos.Y += 3;
-		SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-		printf("Round : %d", gameRound + 1);
-	}
+		static void Alert()
 
-	if (UnitManager::Get()->returnPlayer().poison == true)
-	{
-		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 10);
-		pos.X = 6;
-		pos.Y = 30;
-		SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-		printf("●%d", UnitManager::Get()->returnPlayer().PoisonTime());
-	}
-
-	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
-}
-
-void GameOver()
-{
-	char printf_temp[256];
-	FILE* rfp;
-	rfp = fopen("이미지\\게임오버.tmg", "rt"); // 그림 렌더
-	if (rfp == NULL)
-	{
-		printf("파일 불러오기에 실패했습니다.\n");
-		return;
-	}
-
-	int max = 0;
-	int line = 0;
-	while (fgets(printf_temp, 255, rfp) != NULL)
-	{
-		if (strlen(printf_temp) > max)
 		{
+			Data::pos.X = 30;
+			Data::pos.Y = 19;
+			for (char i = 0; i < 9; i++)
+			{
+				Data::pos.Y += 1;
+				SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+				printf("%s", textBox[i]);
+			}
+			if (Data::alertCount == 1)
+			{
+				int line = 1;
+				Text_Align::text_center(alert[Data::alertCount - 1][0]);
+				Text_Align::line_center(20, 29, line);
+				SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+				printf("%s", alert[Data::alertCount - 1][0]);
+			}
+			else if (Data::alertCount >= 2)
+			{
+				int line = 0;
+				for (; strlen(alert[Data::alertCount - 1][line]); line++) {}
 
-			printf("%d %d", max, line);
-			max = (int)strlen(printf_temp);
+				Text_Align::line_center(20, 29, 2 * line - 1);
+
+				for (int i = 0; i < line; i++)
+				{
+					Text_Align::text_center(alert[Data::alertCount - 1][i]);
+					SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+					printf("%s", alert[Data::alertCount - 1][i]);
+					Data::pos.Y += 2;
+				}
+				for (int i = 0; i < 40; i++)
+				{
+					if (GetAsyncKeyState(VK_SPACE) & 0x0001)
+						break;
+					Sleep(50);
+				}
+				Data::alertCount = 0;
+				Data::skillOn = true;
+				Data::keyInput = 1;
+			}
 		}
-		line++;
-	}
-	fclose(rfp);
-	text_center(max);
-	line_center(-4, 41, line);
-	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-	rfp = fopen("이미지\\게임오버.tmg", "rt");
-	while (fgets(printf_temp, 255, rfp) != NULL)
-	{
-		pos.Y += 1;
-		SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-		printf(printf_temp);
-	}
-	puts("");
-	fclose(rfp);
-
-		Sleep(1500);
-		gameover = false;
-
-
-}
-
-
-
-void Alert()
-{
-	pos.X = 30;
-	pos.Y = 19;
-	for (char i = 0; i < 9; i++)
-	{
-		pos.Y += 1;
-		SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-		printf("%s", textBox[i]);
-	}	
-	if (alertCount == 1)
-	{
-		int line = 1;
-		text_center(alert[0][0]);
-		line_center(20, 28, line);
-		SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-		printf("%s", alert[0][0]);
-	}
-}
-
-void SkillInformation()
-{
-	for (int i = 0; i < 4; i++) // 설명글
-	{
-		pos.Y = 4 + i * 2;
-		text_center(skillinfo[UnitManager::Get()->returnPlayer().PN()-1][button_x - 1][i]);
-		SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-		printf("%s", skillinfo[UnitManager::Get()->returnPlayer().PN()-1][button_x - 1][i]);
-	}
-}
+	};
 
 class Text {
 public:
@@ -270,59 +376,60 @@ public:
 class PlayerInfo : public Text {
 public:
 	void Render()
+
 	{
 		for (int i = 0; i < 4; i++) // 설명글
 		{
-			pos.Y =2 + i * 2;
-			text_center(unit[button_x-1][i]);
-			SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-			printf("%s", unit[button_x-1][i]);
+			Data::pos.Y = 2 + i * 2;
+			Text_Align::text_center(unit[Data::button_x - 1][i]);
+			SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+			printf("%s", unit[Data::button_x - 1][i]);
 		}
 
-			char printf_temp[256]; // 그림 렌더
-			FILE* rfp;
-			rfp = fopen(asciiArt1[button_x - 1], "rt");
-			pos.Y = 10;
-			pos.X = 15;
-			if(rfp==NULL)
-				return ;
+		char printf_temp[256]; // 그림 렌더
+		FILE* rfp;
+		rfp = fopen(asciiArt1[Data::button_x - 1], "rt");
+		Data::pos.Y = 10;
+		Data::pos.X = 15;
+		if (rfp == NULL)
+			return;
 
-			while (fgets(printf_temp, 255, rfp) != NULL)
-			{
-				pos.Y += 1;
-				SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-				printf(printf_temp);
+		while (fgets(printf_temp, 255, rfp) != NULL)
+		{
+			Data::pos.Y += 1;
+			SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+			printf(printf_temp);
 
-			}
-			puts("");
-			fclose(rfp);
+		}
+		puts("");
+		fclose(rfp);
 
 	}
 };
 
 
-class EnemyInfo : public Text {
+class InGame : public Text {
 	void Render()
 	{
-		if(!skillOn)
+		if (!Data::skillOn)
 		{
 			for (int i = 0; i < 4; i++) // 설명글
 			{
-				pos.Y = 2 + i * 2;
-				text_center(enemy[gameRound][i]);
-				SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-				printf("%s", enemy[gameRound][i]);
+				Data::pos.Y = 2 + i * 2;
+				Text_Align::text_center(enemy[Data::gameRound][i]);
+				SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+				printf("%s", enemy[Data::gameRound][i]);
 			}
 		}
 
 		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 14);
-		
-		pos.X = 5;
-		pos.Y = 12;
+
+		Data::pos.X = 5;
+		Data::pos.Y = 12;
 
 		char printf_temp[256];
 		FILE* rfp;
-		rfp = fopen(asciiArt2[gameRound], "rt"); // 그림 렌더
+		rfp = fopen(asciiArt2[Data::gameRound], "rt"); // 그림 렌더
 		if (rfp == NULL)
 		{
 			printf("파일 불러오기에  실패했습니다.\n");
@@ -338,56 +445,88 @@ class EnemyInfo : public Text {
 			line++;
 		}
 		fclose(rfp);
-		text_center(max);
-		line_center(0, 40, line);
-		int X = pos.X;
+		Text_Align::text_center(max);
+		Text_Align::line_center(0, 40, line);
+		int X = Data::pos.X;
 		if (UnitManager::Get()->returnEnemy().GetDamage(false))
 			playingAttackSound();
 
 		for (int i = 0; i < ((UnitManager::Get()->returnEnemy().GetDamage(false)) ? 4 : 1); i++)
 		{
-			if(UnitManager::Get()->returnEnemy().GetDamage(false))
+			Data::pos.X = X;
+			if (UnitManager::Get()->returnEnemy().iced_time())
 			{
-				Map();
-				Status();
-				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 12);
-				pos.X = (i % 2 == 1) ? X - 2 : X + 2;
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 9);
 			}
-				line_center(0, 40, line);
-			rfp = fopen(asciiArt2[gameRound], "rt");
+			if (UnitManager::Get()->returnEnemy().GetDamage(false))
+			{
+				Renderer::Map();
+				Renderer::Status();
+				Data::pos.X = (i % 2 == 1) ? X - 2 : X + 2;
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 12);
+			}
+			else if (Data::wtf)
+			{
+				Renderer::Map();
+				Renderer::Status();
+				Data::pos.Y = 6;
+				Text_Align::text_center(1);
+				SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+				printf("?");
+				Data::pos.X = X;
+
+			}
+			else
+			{
+				Text_Align::text_center(max);
+			}
+			Text_Align::line_center(0, 40, line);
+			rfp = fopen(asciiArt2[Data::gameRound], "rt");
 			while (fgets(printf_temp, 255, rfp) != NULL)
 			{
-				pos.Y += 1;
-				SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
+				Data::pos.Y += 1;
+				SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
 				printf(printf_temp);
 			}
 			if (UnitManager::Get()->returnEnemy().GetDamage(false))
 			{
 				Sleep(100);
-				keyInput = 1;
+				Data::keyInput = 1;
+			}
+			else if (Data::wtf)
+			{
+				Sleep(1000);
+				Data::keyInput = 1;
+				Data::wtf = false;
 			}
 
 			puts("");
 			fclose(rfp);
 		}
-		if (UnitManager::Get()->returnEnemy().GetDamage(false))
-		mciSendCommand(dwID, MCI_SEEK, MCI_SEEK_TO_START, (DWORD_PTR)(LPVOID)NULL);
-		UnitManager::Get()->returnEnemy().GetDamage(true);
+
+		if (UnitManager::Get()->returnEnemy().GetDamage(true))
+			mciSendCommand(dwID, MCI_SEEK, MCI_SEEK_TO_START, (DWORD_PTR)(LPVOID)NULL);
 
 		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
-	}
 
+		if (UnitManager::Get()->returnPlayer().GetDamage(false))
+			Text_Align::text_center("??");
+		Data::pos.Y = 37;
+		SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+		printf("??");
+	}
 };
 
 class Story : public Text {
 
 	void Render()
+
 	{
 		for (int i = 0; i < 3; i++)
 		{
-			pos.Y = 2+i*2;
-			text_center(story[i]);
-			SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
+			Data::pos.Y = 2 + i * 2;
+			Text_Align::text_center(story[i]);
+			SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
 			printf("%s\n\n", story[i]);
 		}
 
@@ -399,13 +538,13 @@ class Story : public Text {
 			printf("파일 불러오기에 실패했습니다.\n");
 			return;
 		}
-		pos.Y += 2;
-		pos.X = 18;
+		Data::pos.Y += 2;
+		Data::pos.X = 18;
 		while (fgets(printf_temp, 255, rfp) != NULL)
 		{
-			pos.Y += 1;
-			SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-			printf(printf_temp);		
+			Data::pos.Y += 1;
+			SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+			printf(printf_temp);
 
 		}
 		puts("");

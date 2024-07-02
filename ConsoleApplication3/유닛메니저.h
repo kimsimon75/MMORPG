@@ -1,4 +1,3 @@
-#pragma once
 #include "플레이어.h"
 #include "적.h"
 
@@ -33,6 +32,13 @@ public:
 		return *player;
 	}
 
+	void NextRound(Player& clone)
+	{
+
+		player = new Player(clone);
+		delete &clone;
+	}
+
 	void SetEnemy(int round)
 	{
 		if (enemy != nullptr)
@@ -46,6 +52,7 @@ public:
 	{
 		return *enemy;
 	}
+	
 };
 
 UnitManager* UnitManager::p = nullptr;

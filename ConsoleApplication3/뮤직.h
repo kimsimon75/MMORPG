@@ -1,7 +1,8 @@
- //키보드 입력
-#pragma comment (lib, "winmm.lib")    //음악
-#include <mmsystem.h>;                //음악
-#include <Digitalv.h>;                //음악
+#pragma once
+#include <mmsystem.h>             //음악
+#include <Digitalv.h>
+
+#pragma comment (lib, "winmm.lib")               //음악
 
 MCI_OPEN_PARMS openBgm;
 MCI_PLAY_PARMS playBgm;
@@ -12,12 +13,17 @@ MCI_PLAY_PARMS playShuffleSound;
 #define BARK L"소리\\bark.mp3"//효과음 경로 지정
 int dwID;
 
+
+
+
 void playingBgm(void) {
     openBgm.lpstrElementName = BGM;            //파일 오픈
     openBgm.lpstrDeviceType = L"mpegvideo";    //mp3 형식
     mciSendCommand(0, MCI_OPEN, MCI_OPEN_ELEMENT | MCI_OPEN_TYPE, (DWORD_PTR)(LPVOID)&openBgm);
     dwID = openBgm.wDeviceID;
-    mciSendCommand(dwID, MCI_PLAY, MCI_DGV_PLAY_REPEAT, (DWORD_PTR)(LPVOID)&openBgm);    //음악 반복 재생
+
+    
+    mciSendCommand(dwID, MCI_PLAY, MCI_DGV_PLAY_REPEAT, (DWORD_PTR)(LPVOID)&openBgm);    //음악 반복 재 생
 }
 void playingAttackSound(void) {
     openShuffleSound.lpstrElementName = SHUFFLE;    //파일 오픈
@@ -34,3 +40,4 @@ void playingBarkSound(void) {
     dwID = openShuffleSound.wDeviceID;
     mciSendCommand(dwID, MCI_PLAY, MCI_DGV_PLAY_REPEAT, (DWORD_PTR)(LPVOID)&openShuffleSound);    //음악을 한 번 재생
 }
+

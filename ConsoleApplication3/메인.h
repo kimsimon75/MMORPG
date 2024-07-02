@@ -1,160 +1,393 @@
+#pragma once
 #ifndef _TEXT_
 #define _TEXT_
 #include "텍스트메니저.h"
 #endif
 
+
 bool SP = false;
 bool Dead = false;
+bool stopTheGame = false;
+bool playerTurn = false;
 
 #define BEEPSOUND 560
 
+void NextRound()
+{
+	UnitManager::Get()->returnEnemy().ReturnHP() = 0;
+	TextManager::Get()->Update();
+  	UnitManager::Get()->SetEnemy(++Data::gameRound);
+	UnitManager::Get()->returnEnemy().GetDamage(true); 
+
+ 	UnitManager::Get()->NextRound(UnitManager::Get()->returnPlayer()); 
+	UnitManager::Get()->returnPlayer().GameRound() = Data::gameRound;
+}
+
+
+void ResetGame()
+{
+	TextManager::Get()->SetRenderer(STORY);
+	delete[] Data::skillSet;
+	Data::skillSet = nullptr;
+	Data::skillCount = 0;
+	Data::skillOn = false;
+	Data::button_x = 1;
+	Data::state = 0;
+	Data::gameRound = 0;
+
+}
+
 void EnemyTurn()
 {
-	if (UnitManager::Get()->returnEnemy().returnHP() <= 0)
-	{
-		UnitManager::Get()->returnEnemy().returnHP() = 0;
-		TextManager::Get()->Update();
-		UnitManager::Get()->SetEnemy(++gameRound);
-		UnitManager::Get()->returnPlayer().poison = false;
-	}
-	else
-	{
-		if (gameRound == 1 && UnitManager::Get()->returnEnemy().GetDamage(false))
-			UnitManager::Get()->returnEnemy().DamageUp();
-		if (UnitManager::Get()->returnEnemy().ReturnMaxMP() != 0 && UnitManager::Get()->returnEnemy().ReturnMP() >= UnitManager::Get()->returnEnemy().ReturnMaxMP())
+	Data::keyInput = 1;
+
+
+		if (UnitManager::Get()->returnEnemy().ReturnHP() <= 0)
 		{
-			UnitManager::Get()->returnEnemy().Special_Attack(UnitManager::Get()->returnPlayer(), gameRound);
-			UnitManager::Get()->returnEnemy().ReturnMP() = 0;
-			SP = true;
+			NextRound();
 		}
 		else
-			UnitManager::Get()->returnEnemy().basic_Attack(UnitManager::Get()->returnPlayer());
-	}
+		{
 
+			if (!UnitManager::Get()->returnEnemy().StunTime() && !UnitManager::Get()->returnEnemy().iced_time())
+			{
+				TextManager::Get()->Update();
+				if (UnitManager::Get()->returnEnemy().ReturnMaxMP() != 0 && UnitManager::Get()->returnEnemy().ReturnMP() >= UnitManager::Get()->returnEnemy().ReturnMaxMP())
+				{
+					UnitManager::Get()->returnEnemy().Special_Attack(UnitManager::Get()->returnPlayer(), Data::gameRound);
+					UnitManager::Get()->returnEnemy().ReturnMP() = 0;
+					SP = true;
+				}
+				else
+					UnitManager::Get()->returnEnemy().basic_Attack(UnitManager::Get()->returnPlayer());
+			}
+	}
+	if (UnitManager::Get()->returnEnemy().StunTime())
+		UnitManager::Get()->returnEnemy().StunTime()--;
+	if (UnitManager::Get()->returnEnemy().iced_time())
+		UnitManager::Get()->returnEnemy().iced_time()--;
+	UnitManager::Get()->returnEnemy().AP() -= 100;
 }
 
 void EndTurn()
 {
-	if (UnitManager::Get()->returnPlayer().ShowBuff())
-	{
-		UnitManager::Get()->returnPlayer().SetDamage(1.5);
-		--UnitManager::Get()->returnPlayer().ShowBuff();
-	}
-	else
-	{
-		UnitManager::Get()->returnPlayer().SetDamage(1.0);
-	}
-	if (SP == false)
-	{
-		UnitManager::Get()->returnEnemy().ManaCharge();
-		if (UnitManager::Get()->returnEnemy().poison)
-			UnitManager::Get()->returnEnemy().GetPoison();
+		if (UnitManager::Get()->returnPlayer().ShowBuff())
+		{
+			UnitManager::Get()->returnPlayer().SetDamage(1.5);
+			--UnitManager::Get()->returnPlayer().ShowBuff();
+		}
+		else if (UnitManager::Get()->returnPlayer().PN() != 3)
+		{
+			UnitManager::Get()->returnPlayer().SetDamage(1.0);
+		}
 
-		if (UnitManager::Get()->returnPlayer().poison)
-			UnitManager::Get()->returnPlayer().GetPoison();
+		if(UnitManager::Get()->returnPlayer().PN()!=4)
+		{
+			if (UnitManager::Get()->returnPlayer().IntelCool())
+			{
+				UnitManager::Get()->returnPlayer().SetIntel(50);
+				--UnitManager::Get()->returnPlayer().IntelCool();
+			}
+			else
+				UnitManager::Get()->returnPlayer().SetIntel(0);
+		}
 
-	}
-	else
-		SP = false;
+  	if (UnitManager::Get()->returnEnemy().PoisonTime()) UnitManager::Get()->returnEnemy().GetPoison();
+
+	if (UnitManager::Get()->returnPlayer().PoisonTime()) UnitManager::Get()->returnPlayer().GetPoison();
+
+	if (Data::gameRound == 1 && UnitManager::Get()->returnEnemy().GetDamage(false))
+		UnitManager::Get()->returnEnemy().DamageUp(); 
+
+ 	if (UnitManager::Get()->returnEnemy().ReturnHP() <= 0)
+		NextRound();
+	
+	if (SP == false) UnitManager::Get()->returnEnemy().ManaCharge();
+
+	else SP = false;
+
+
 	UnitManager::Get()->returnPlayer().ManaCharge();
 
+	if (UnitManager::Get()->returnEnemy().ReturnHP() <= 0)
+		NextRound();
 
-	if (UnitManager::Get()->returnPlayer().returnHP() <= 0)
+
+	if (UnitManager::Get()->returnPlayer().BarrierCool()) UnitManager::Get()->returnPlayer().BarrierCool()--;
+
+	if (!UnitManager::Get()->returnPlayer().BarrierCool())UnitManager::Get()->returnPlayer().BarrierSize() = 0;
+
+	if (!UnitManager::Get()->returnPlayer().BarrierSize())UnitManager::Get()->returnPlayer().BarrierCool() = 0;
+
+	if (UnitManager::Get()->returnPlayer().ReturnHP() <= 0)
 		gameover = true;
 
 	UnitManager::Get()->returnEnemy().Restoring();
 	UnitManager::Get()->returnPlayer().Restoring();
 }
 
-void ResetGame()
+void PlayerTurn()
 {
-	TextManager::Get()->SetRenderer(STORY);
-	if (&UnitManager::Get()->returnPlayer())
-		UnitManager::Get()->returnPlayer().poison = false;
-	delete[] skillSet;
-	skillSet = nullptr;
-	skillCount = 0;
-	skillOn = false;
-	button_x = 1;
-	state = 0;
-	gameRound = 0;
+	playerTurn = true;
+	if (GetAsyncKeyState(VK_LEFT) & 0x0001)
+	{
+		Data::keyInput = 1;
+		if (Data::state <= 2)
+		{
+
+			Beep(BEEPSOUND, 50);
+			Data::button_x--;
+			if (Data::button_x < ((Data::alertCount == 1) ? 2 : 1))
+			{
+				Data::button_x = (Data::alertCount == 1) ? 3 : ((Data::skillOn) ? Data::skillCount : Data::maxCount);
+			}
+			if (Data::Data::state == 1)
+			{
+				UnitManager::Get()->SetPlayer(Data::button_x);
+				Data::gameRound = 0;
+			}
+
+		}
+	}
+
+	if (GetAsyncKeyState(VK_RIGHT) & 0x0001)
+	{
+		Beep(BEEPSOUND, 50);
+		Data::keyInput = 1;
+		if (Data::state <= 2)
+		{
+			Data::button_x++;
+			if (Data::button_x > ((Data::alertCount == 1) ? 3 : ((Data::skillOn) ? Data::skillCount : Data::maxCount)))
+				Data::button_x = (Data::alertCount == 1) ? 2 : 1;
+			if (Data::state == 1)
+			{
+				UnitManager::Get()->SetPlayer(Data::button_x);
+				Data::gameRound = 0;
+			}
+		}
+	}
+	if (Data::button_x - 1 > Data::currentCount + 3)
+	{
+		Data::currentCount = Data::button_x - 4;
+	}
+	if (Data::button_x - 1 < Data::currentCount)
+	{
+		Data::currentCount = Data::button_x - 1;
+	}
+
+	if (GetAsyncKeyState(VK_SPACE) & 0x0001)
+	{
+		Beep(BEEPSOUND, 50);  
+		Data::keyInput = 1;
+		if (Data::alertCount == 1)
+		{
+			switch (Data::button_x)
+			{
+			case 3:
+				ResetGame();
+			case 2:
+				Data::alertCount = 0;
+				stopTheGame = true;
+				break;
+			}
+		}
+		else
+		{
+			if (Data::skillOn)
+			{
+				if (Data::skillCount == Data::button_x)
+				{
+					stopTheGame = true;
+				}
+				else
+				{
+					pair<bool, int> p = (UnitManager::Get()->returnPlayer().*Data::skillSet[Data::button_x - 1])(UnitManager::Get()->returnEnemy());
+					if (p.first == 0)
+					{
+						if (UnitManager::Get()->returnPlayer().ReturnHP() - p.second >= 0)
+						{
+							Data::alertCount = -1;
+							UnitManager::Get()->returnPlayer().SetAlertCount() = Data::alertCount;
+							(UnitManager::Get()->returnPlayer().*Data::skillSet[Data::button_x - 1])(UnitManager::Get()->returnEnemy());
+
+							if (UnitManager::Get()->returnPlayer().SetAlertCount() >= 1)
+							{
+								Data::alertCount = UnitManager::Get()->returnPlayer().SetAlertCount();
+								UnitManager::Get()->returnPlayer().SetAlertCount() = 0;
+								Data::keyInput = 1;
+							}
+							else
+							{
+								Data::alertCount = 0;
+								UnitManager::Get()->returnPlayer().SetAlertCount() = Data::alertCount;
+							}
+						}
+						else
+						{
+							Data::alertCount = 2;
+							Data::keyInput = 1;
+						}
+					}
+					else
+					{
+						if (UnitManager::Get()->returnPlayer().ReturnMP() - p.second >= 0)
+						{
+							Data::alertCount = -1;
+							UnitManager::Get()->returnPlayer().SetAlertCount() = Data::alertCount;
+							(UnitManager::Get()->returnPlayer().*Data::skillSet[Data::button_x - 1])(UnitManager::Get()->returnEnemy());
+
+							if (UnitManager::Get()->returnPlayer().SetAlertCount() >= 1)
+							{
+								Data::alertCount = UnitManager::Get()->returnPlayer().SetAlertCount();
+								UnitManager::Get()->returnPlayer().SetAlertCount() = 0;
+								Data::keyInput = 1;
+							}
+							else
+							{
+								Data::alertCount = 0;
+								UnitManager::Get()->returnPlayer().SetAlertCount() = Data::alertCount;
+							}
+						}
+						else
+						{
+							Data::alertCount = 3;
+							Data::keyInput = 1;
+						}
+					}
+				}
+				Data::skillOn = false;
+			}
+			else
+				switch (Data::button_x)
+				{
+				case 1:
+					UnitManager::Get()->returnPlayer().basic_Attack(UnitManager::Get()->returnEnemy());
+					break;
+				case 2:
+					stopTheGame = true;
+					Data::skillOn = true;
+					break;
+				case 3:
+					stopTheGame = true;
+					break;
+				case 4:
+					stopTheGame = true;
+				case 5:
+					stopTheGame = true;
+				default:
+					break;
+				}
+		}
+		if (Data::alertCount)
+ 			stopTheGame = true;
+		if (stopTheGame)
+			stopTheGame = false;
+		else
+		{
+			playerTurn = false;
+			UnitManager::Get()->returnPlayer().AP() -= 100;
+			if (!UnitManager::Get()->returnEnemy().GetDamage(false)&&!UnitManager::Get()->returnEnemy().iced_time()) Data::wtf = true;
+			
+			if (UnitManager::Get()->returnEnemy().GetDamage(false))
+			{
+				if (UnitManager::Get()->returnEnemy().ReturnHP() < 0)
+					UnitManager::Get()->returnEnemy().ReturnHP() = 0;  
+ 	 	  	 	if(Data::gameRound==1)
+				UnitManager::Get()->returnEnemy().DamageUp();
+				TextManager::Get()->Update();
+			}
+		} 
+		Data::currentCount = 0;
+		Data::button_x = 1;
+	}
+
+	if (GetAsyncKeyState(VK_ESCAPE) & 0x0001)
+	{
+		Beep(BEEPSOUND, 50);
+		Data::keyInput = 1;
+		Data::currentCount = 0;
+			if (Data::alertCount == 1)
+			{
+				Data::button_x = 1;
+				Data::alertCount = 0;
+			}
+			else
+			{
+				Data::alertCount = 1;
+				Data::button_x = 2;
+			}
+	}
+	Data::maxCount = 0;
+	for (int i = 0; (int)strlen(text[Data::state][i]); i++)
+	{
+		Data::maxCount++;
+	}  
 
 }
+
 
 void KeyValue()
 {
 	static bool stopTheGame = false;
 
-	while (state >= 2 && UnitManager::Get()->returnPlayer().StunTime())
-	{
-		keyInput = 1;
-		EnemyTurn();
-		EndTurn();
-		UnitManager::Get()->returnPlayer().StunTime()--;
-	}
-
 	if (GetAsyncKeyState(VK_LEFT) & 0x0001)
 	{
-		keyInput = 1;
-		if (state <= 2)
-		{
-
-			button_x--;
-			if (button_x < ((alertCount == 1) ? 2 : 1))
-			{
-				button_x = (alertCount == 1) ? 3 : ((skillOn) ? skillCount : maxCount);
-			}
-			if (state == 1)
-			{
-				UnitManager::Get()->SetPlayer(button_x);
-				gameRound = 0;
-			}
-
+		Data::keyInput = 1;
 			Beep(BEEPSOUND, 50);
-		}
+			Data::button_x--;
+			if (Data::button_x < ((Data::alertCount == 1) ? 2 : 1))
+			{
+				Data::button_x = (Data::alertCount == 1) ? 3 : ((Data::skillOn) ? Data::skillCount : Data::maxCount);
+			}
+			if (Data::state == 1)
+			{
+				UnitManager::Get()->SetPlayer(Data::button_x);
+				Data::gameRound = 0;
+			}
 	}
 	if (GetAsyncKeyState(VK_RIGHT) & 0x0001)
 	{
-		keyInput = 1;
-		if (state <= 2)
+		Beep(BEEPSOUND, 50);
+		Data::keyInput = 1;
+		if (Data::state <= 2)
 		{
-			button_x++;
-			if (button_x > ((alertCount == 1) ? 3 : ((skillOn) ? skillCount : maxCount)))
-				button_x = (alertCount == 1) ? 2 : 1;
-			if (state == 1)
+			Data::button_x++;
+			if (Data::button_x > ((Data::alertCount == 1) ? 3 : ((Data::skillOn) ? Data::skillCount : Data::maxCount)))
+				Data::button_x = (Data::alertCount == 1) ? 2 : 1;
+			if (Data::state == 1)
 			{
-				UnitManager::Get()->SetPlayer(button_x);
-				gameRound = 0;
+				UnitManager::Get()->SetPlayer(Data::button_x);
+				Data::gameRound = 0;
 			}
-			Beep(BEEPSOUND, 50);
 		}
 	}
-	if (button_x - 1 > currentCount + 3)
+	if (Data::button_x - 1 > Data::currentCount + 3)
 	{
-		currentCount = button_x - 4;
+		Data::currentCount = Data::button_x - 4;
 	}
-	if (button_x - 1 < currentCount)
+	if (Data::button_x - 1 < Data::currentCount)
 	{
-		currentCount = button_x - 1;
+		Data::currentCount = Data::button_x - 1;
 	}
 
 
 	if (GetAsyncKeyState(VK_SPACE) & 0x0001)
 	{
-		keyInput = 1;
-		switch (state)
+		Beep(BEEPSOUND, 50);
+		Data::keyInput = 1;
+		switch (Data::state)
 		{
 		case 0: // 메뉴창
-			switch (button_x)
+			switch (Data::button_x)
 			{
 			case 1:
-				state = 1;
+				Data::state = 1;
 				TextManager::Get()->SetRenderer(PLAYERINFO);
-				UnitManager::Get()->SetPlayer(button_x);
+				UnitManager::Get()->SetPlayer(Data::button_x);
 				break;
 			case 2:
 			case 3:
-				state = 3;
+				Data::state = 3;
 				TextManager::Get()->SetRenderer(HOWTOPLAY);
 				break;
 			case 4:
@@ -164,128 +397,60 @@ void KeyValue()
 			break;
 		case 1: // 케릭터 선택창
 		{
-			TextManager::Get()->SetRenderer(ENEMY);
+			TextManager::Get()->SetRenderer(INGAME);
 
-			UnitManager::Get()->SetPlayer(button_x);
+			UnitManager::Get()->SetPlayer(Data::button_x);
 			UnitManager::Get()->SetEnemy(0);
-			skillCount = 0;
+			Data::skillCount = 0;
 
-			while (strlen(skills[button_x - 1][skillCount])) { ++skillCount; }
-			skillSet = new Func[skillCount - 1];
+			while (strlen(skills[Data::button_x - 1][Data::skillCount])) { ++Data::skillCount; }
+			Data::skillSet = new Func[Data::skillCount - 1];
 
-			switch (button_x)
+			switch (Data::button_x)
 			{
 			case 1:
-				skillSet[0] = &Player::DamageUp;
-				skillSet[1] = &Player::Rush;
-				skillSet[2] = &Player::DoubleAttack;
+				Data::skillSet[0] = &Player::DamageUp;
+				Data::skillSet[1] = &Player::Rush;
+				Data::skillSet[2] = &Player::DoubleAttack;
 				break;
 			case 2:
-				skillSet[0] = &Player::DamageUp;
-				skillSet[1] = &Player::DamageUp;
-				skillSet[2] = &Player::DamageUp;
+				Data::skillSet[0] = &Player::fireball;
+				Data::skillSet[1] = &Player::IceMagic;
+				Data::skillSet[2] = &Player::PutOnBarrier;
+				Data::skillSet[3] = &Player::Intel;
 				break;
 			case 3:
-				skillSet[0] = &Player::DamageUp;
-				skillSet[1] = &Player::DamageUp;
-				skillSet[2] = &Player::DamageUp;
+				Data::skillSet[0] = &Player::DamageAbsorb;
+				Data::skillSet[1] = &Player::PoisonAttack;
+				Data::skillSet[2] = &Player::Dart;
+				Data::skillSet[3] = &Player::Enemy_s_;
 				break;
 			case 4:
-				skillSet[0] = &Player::DamageUp;
-				skillSet[1] = &Player::DamageUp;
-				skillSet[2] = &Player::DamageUp;
-				break;
-			default:
-
-				skillSet[0] = &Player::DamageUp;
-				skillSet[1] = &Player::DamageUp;
-				skillSet[2] = &Player::DamageUp;
+				Data::skillSet[0] = &Player::IntelligenceAbsorb;
+				Data::skillSet[1] = &Player::PowerOfGod;
+				Data::skillSet[2] = &Player::Heal;
 				break;
 			}
-			state = 2;
+			Data::state = 2;
 
 		}
 		break;
-		case 2: // 게임 시작
-			if (alertCount == 1)
-			{
-				switch (button_x)
-				{
-				case 3:
-					ResetGame();
-				case 2:
-					alertCount = 0;
-					stopTheGame = true;
-					break;
-				}
-			}
-			else
-			{
-				if (skillOn)
-				{
-					if (skillCount == button_x)
-					{
-						stopTheGame = true;
-					}
-					else
-						(UnitManager::Get()->returnPlayer().*skillSet[button_x - 1])(UnitManager::Get()->returnEnemy());
-					skillOn = false;
-				}
-				else
-					switch (button_x)
-					{
-					case 1:
-						UnitManager::Get()->returnPlayer().basic_Attack(UnitManager::Get()->returnEnemy());
-						break;
-					case 2:
-						stopTheGame = true;
-						skillOn = true;
-						break;
-					case 3:
-						stopTheGame = true;
-						break;
-					case 4:
-						stopTheGame = true;
-					case 5:
-						stopTheGame = true;
-					default:
-						break;
-					}
-			}
-			if (stopTheGame)
-				stopTheGame = false;
-
-			else
-			{
-				EnemyTurn();
-				EndTurn();
-			}
-			break;
 		}
-		currentCount = 0;
-		button_x = 1;
-		Beep(BEEPSOUND, 50);
+		Data::currentCount = 0;
+		Data::button_x = 1;
 	}
 
 	if (GetAsyncKeyState(VK_ESCAPE) & 0x0001)
 	{
-		keyInput = 1;
-		currentCount = 0;
-		if (state == 2)
-		{
-			alertCount = 1;
-			button_x = 2;
-		}
-		else if (state >= 1)
-		{
-			ResetGame();
-		}
-
 		Beep(BEEPSOUND, 50);
+		Data::keyInput = 1;
+		Data::currentCount = 0;
+		
+		ResetGame();
 	}
-	maxCount = 0;
-	for (int i = 0; (int)strlen(text[state][i]); i++)
+	Data::maxCount = 0;
+	for (int i = 0; (int)strlen(text[Data::state][i]); i++)
 	{
-		maxCount++;
+		Data::maxCount++;
 	}
 }

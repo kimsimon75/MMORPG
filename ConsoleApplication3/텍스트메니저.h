@@ -33,8 +33,8 @@ public:
 		case HOWTOPLAY:
 			text = new HowToPlay;
 			break;
-		case ENEMY:
-			text = new EnemyInfo;
+		case INGAME:
+			text = new InGame;
 			break;
 		}
 	}

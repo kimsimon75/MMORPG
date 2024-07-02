@@ -1,8 +1,8 @@
+#pragma once
 #ifndef _UNIT_
 #define _UNIT_
 #include "РЏДж.h"
 #endif
-
 
 static bool gameover = false;
 
@@ -12,14 +12,25 @@ private:
 
 	int playerNumber;
 	int damageUpCool=0;
+	int enemys = false;
+	int gameRound = 0;
 	friend class Enemy;
 public:
 	Player(int hp, int mp, int attack, int intelligence, int agility, int armor, int restore, int id) : Unit(hp, mp, attack, intelligence, agility, armor, restore)
 	{
 		this->playerNumber = id;
+		this->current_mp = max_mp;
 	}
 
-	void basic_Attack(class Unit& target);
+	Player(Player& player) : Unit(player.max_hp, player.max_mp, player.basic_damage, player.basic_intelligence, player.agility, player.armor, player.restore)
+	{
+		playerNumber = player.playerNumber;
+		if (player.playerNumber == 3)
+		{
+			basic_damage = player.basic_damage; 
+			attack = player.attack;
+		}
+	}
 
 	int PN()
 	{
@@ -30,14 +41,7 @@ public:
 	{
 		playerNumber = id;
 	}
-
-	void DamageUp(Unit& target)
-	{
-		damageUpCool = 5;
-		current_hp -= 50;
-		if (current_hp <= 0)
-			gameover = true;
-	}
+	
 	int& ShowBuff()
 	{
 		return damageUpCool;
@@ -47,8 +51,26 @@ public:
 	{
 		attack = basic_damage * rank;
 	}
+	int& GameRound()
+	{
+		return gameRound;
+	}
 
-	void DoubleAttack(Unit& target)
+	pair<bool, int> basic_Attack(class Unit& target);
+
+	pair<bool, int> DamageUp(Unit& target)
+	{
+		if (alertCount == 0)
+			return make_pair(0, 50);
+		else if(alertCount == -1)
+		{
+			damageUpCool = 5;
+			current_hp -= 50;
+		}
+		return make_pair(0,0);
+	}
+
+	pair<bool, int> DoubleAttack(Unit& target)
 	{
 		std::random_device rd;
 
@@ -60,6 +82,43 @@ public:
 		{
 			basic_Attack(target);
 			basic_Attack(target);
+		}
+		return make_pair(0, 0);
+	}
+
+	pair<bool, int> Enemy_s_(Unit& target)
+	{
+		if(!enemys)
+		{
+			int mana = 50;
+			if (alertCount == 0)
+				return make_pair(1, mana);
+			if(alertCount == -1)
+			{
+				switch (gameRound)
+				{
+				case 0:
+					Unit::PoisonAttack(target);
+					break;
+				case 1:
+					Unit::DamageUp();
+	  	 			 break;
+				}
+				current_mp -= mana;
+			}
+			enemys = true;
+		}
+	}
+
+	pair<bool, int> PoisonAttack(Unit& target)
+	{
+		int mana = 30;
+		if(alertCount==0)
+			return make_pair(1, mana);
+		else if(alertCount == -1)
+		{
+			target.poison_time = 2;
+			target.poison_damage = (10 + (float)intelligence * 0.2) * (1 + (float)agility * 0.03);
 		}
 	}
 };

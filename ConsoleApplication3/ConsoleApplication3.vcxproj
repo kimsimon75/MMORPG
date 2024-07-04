@@ -128,7 +128,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ConsoleApplication3.cpp" />
-    <ClCompile Include="렌더.cpp" />
     <ClCompile Include="적.cpp" />
     <ClCompile Include="플레이어.cpp" />
   </ItemGroup>

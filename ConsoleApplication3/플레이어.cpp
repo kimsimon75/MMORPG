@@ -9,9 +9,18 @@ pair<bool, int> Player::basic_Attack(Unit& target)
 	if (playerNumber == 4)
 	{
 		int damage = intelligence * 0.1;
-		target.current_hp -= damage;
-		max_hp += damage;
-		current_hp += damage;
+		if (damage > target.current_hp)
+		{
+			max_hp += target.current_hp;
+			current_hp += target.current_hp;
+			target.current_hp = 0;
+		}
+		else
+		{
+			target.current_hp -= damage;
+			max_hp += damage;
+			current_hp += damage;
+		}
 	}
 	else
 	{

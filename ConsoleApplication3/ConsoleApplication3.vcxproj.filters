@@ -24,9 +24,6 @@
     <ClCompile Include="적.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="렌더.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="유닛.h">

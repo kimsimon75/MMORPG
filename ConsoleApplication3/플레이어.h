@@ -30,6 +30,11 @@ public:
 			basic_damage = player.basic_damage; 
 			attack = player.attack;
 		}
+		if (player.playerNumber == 4)
+		{
+			basic_intelligence = player.basic_intelligence;
+			intelligence = player.intelligence;
+		}
 	}
 
 	int PN()
@@ -60,12 +65,14 @@ public:
 
 	pair<bool, int> DamageUp(Unit& target)
 	{
+		int hp = 50;
 		if (alertCount == 0)
-			return make_pair(0, 50);
+			return make_pair(0, hp);
 		else if(alertCount == -1)
 		{
 			damageUpCool = 5;
-			current_hp -= 50;
+			current_hp -= hp;
+			pre_hp = current_hp;
 		}
 		return make_pair(0,0);
 	}
@@ -119,8 +126,18 @@ public:
 		{
 			target.poison_time = 2;
 			target.poison_damage = (10 + (float)intelligence * 0.2) * (1 + (float)agility * 0.03);
+			current_mp -= mana;
+		}
+	}
+	pair<bool, int> ignite(Unit& target)
+	{
+		int mana = 30;
+		if (alertCount == 0)
+			return make_pair(1, mana);
+		else if (alertCount == -1)
+		{
+			target.ignite_time = 2 * (1 + 0.01 * intelligence);
+			target.ignite_damage = 30;
 		}
 	}
 };
-
-

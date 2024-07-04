@@ -8,63 +8,68 @@
 void Render()
 {
 	Data::keyInput = 0;
-	Renderer::Map();
+	Map();
 	TextManager::Get()->Update();
-	Renderer::Button();
-	Renderer::Play();
+	Button();
+	Play();
 	if (Data::state >= 1 && Data::state < 3)
-		Renderer::Status();
+		Status();
 
 
 	if (Data::alertCount)
 		Warning::Alert();
-	if (Data::skillOn)
-		Renderer::SkillInformation();
+	else if (Data::skillOn)
+		SkillInformation();
 
 }
 
 void Gameplay()
 {
-	while (UnitManager::Get()->returnPlayer().AP() < 100 && UnitManager::Get()->returnEnemy().AP() < 100) {
+	while (UnitManager::Get()->returnPlayer().AP() < 100 || UnitManager::Get()->returnEnemy().AP() < 100) {
 		UnitManager::Get()->returnPlayer().APCharge();
 		UnitManager::Get()->returnEnemy().APCharge();
 		Render();
 		Sleep(30);
 	}
-	if (UnitManager::Get()->returnPlayer().AP() >= 100 && UnitManager::Get()->returnEnemy().AP() >= 100)
+	while (UnitManager::Get()->returnPlayer().AP() >= 100 || UnitManager::Get()->returnEnemy().AP() >= 100)
 	{
-		if (UnitManager::Get()->returnPlayer().AP() >= UnitManager::Get()->returnEnemy().AP())	
+		if (UnitManager::Get()->returnPlayer().AP() >= UnitManager::Get()->returnEnemy().AP())
 		{
-			PlayerTurn();
-			if (!playerTurn)
+
+			if (UnitManager::Get()->returnPlayer().StunTime())
 			{
-				EnemyTurn();
-				EndTurn();
+				--UnitManager::Get()->returnPlayer().StunTime();
+				UnitManager::Get()->returnPlayer().AP() -= 100;
+				UnitManager::Get()->returnEnemy().WTF()=true;
+				Data::keyInput = 1;
 			}
+			else PlayerTurn();
+			if (Data::keyInput)
+				Render();
+
+			if (UnitManager::Get()->returnEnemy().ReturnHP() <= 0)
+				NextRound();
+
 		}
 		else
 		{
+			Sleep(1000);
 			EnemyTurn();
-			
-			PlayerTurn();
-			if (!playerTurn)
+			Render();
+			if (UnitManager::Get()->returnPlayer().AP() >= 100)
+				Render();
+
+			if (UnitManager::Get()->returnPlayer().ReturnHP() <= 0)
 			{
-				EndTurn();
+				Map();
+				Warning::GameOver();
+				ResetGame();
 			}
 		}
+		rewind(stdin);
+	}
+	EndTurn();
 
-	}
-	else if (UnitManager::Get()->returnPlayer().AP() >= 100)
-	{
-		PlayerTurn();
-		if (!playerTurn)
-			EndTurn();
-	}
-	else if (UnitManager::Get()->returnEnemy().AP() >= 100)
-	{
-		EnemyTurn();
-		EndTurn();
-	}
 }
 
 int main(){
@@ -89,15 +94,12 @@ int main(){
 			{
  				Render();
 			}
-			if(Data::state!=2)
-			KeyValue();
-			if(Data::state==2)
-			{
-				Gameplay();
-			}
+			if(Data::state!=2) KeyValue();
+			else Gameplay();
+
 
 		}
-		Renderer::Map();
+		Map();
 		Warning::GameOver();
 		ResetGame();
 	}

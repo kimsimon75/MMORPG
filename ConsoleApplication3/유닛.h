@@ -40,6 +40,7 @@ protected:
 	int intelUpCool = 0;
 
 	int alertCount = 0;
+	bool wtf = false;
 
 	int attackPoint = 0;
 
@@ -78,7 +79,7 @@ public:
 
 	bool GetDamage(bool test)
 	{
-		if (current_hp != pre_hp)
+		if (current_hp < pre_hp)
 		{
 			if(test == true)
 				pre_hp = current_hp;
@@ -98,6 +99,7 @@ public:
 		current_hp += restore;
 		if (current_hp > max_hp)
 			current_hp = max_hp;
+		pre_hp = current_hp;
 	}
 
 	void ManaCharge()
@@ -122,10 +124,25 @@ public:
 	{
 		return poison_time;
 	}
+	void GetIgnite()
+	{
+		barrier -= ignite_damage;
+		if (barrier < 0)
+		{
+			current_hp += barrier;
+			barrier = 0;
+		}
+		--ignite_time;
+	}
+
+	int IgniteTime()
+	{
+		return ignite_time;
+	}
 
 	void DamageUp()
 	{
-		attack += basic_damage * 0.5;
+		attack += basic_damage;
 	}
 
 	bool& TurnReturn()
@@ -171,6 +188,11 @@ public:
 	void APCharge()
 	{
 		attackPoint += 10 + agility * 0.05;
+	}
+
+	bool& WTF()
+	{
+		return wtf;
 	}
 
 	pair<bool, int> PoisonAttack(Unit& target)
@@ -238,14 +260,11 @@ public:
 
 	pair<bool, int> ignite(Unit& target)
 	{
-		int mana = 30;
-		if (alertCount == 0)
-			return make_pair(1, mana);
-		else if (alertCount == -1)
-		{
-			target.poison_time = 2;
-			target.poison_damage = (10 + (float)intelligence * 0.2) * (1 + (float)agility * 0.03);
-		}
+		
+	
+			target.ignite_time = 2 * (1 + 0.01 * intelligence);
+			target.ignite_damage = 30;
+			return make_pair(0, 0);
 	}
 
 	pair<bool, int> IceMagic(Unit& target)
@@ -373,6 +392,7 @@ public:
 			current_hp += 30 + intelligence * 0.1;
 			if (current_hp > max_hp)
 				current_hp = max_hp;
+			pre_hp = current_hp;
 			current_mp -= mana;
 		}
 	}
@@ -386,7 +406,7 @@ const int playerInfo[4][7] = { //체력, 마나, 공격력, 지능, 민첩성, 방어도, 체력�
 
 const int enemyInfo[3][7] = {
 	100, 50, 0, 200, 10, 20, 0,
-	200, 0, 30, 0, 80, 10, 0,
+	200, 0, 15, 0, 80, 10, 0,
 	300, 0, 50, 0, 20, 50, 0,
 };
 

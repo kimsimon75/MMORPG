@@ -127,11 +127,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Caculate.cpp" />
     <ClCompile Include="ConsoleApplication3.cpp" />
+    <ClCompile Include="유닛.cpp" />
+    <ClCompile Include="유닛메니저.cpp" />
     <ClCompile Include="적.cpp" />
     <ClCompile Include="플레이어.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Caculate.h" />
     <ClInclude Include="렌더.h" />
     <ClInclude Include="메인.h" />
     <ClInclude Include="뮤직.h" />

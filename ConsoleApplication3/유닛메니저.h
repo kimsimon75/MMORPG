@@ -1,3 +1,5 @@
+#ifndef _UNITMANAGER_
+#define _UNITMANAGER_
 #include "플레이어.h"
 #include "적.h"
 
@@ -6,53 +8,19 @@ class UnitManager
 private:
 	static UnitManager* p;
 public:
-	static UnitManager* Get()
-	{
-		if (p == nullptr)
-		{
-			p = new UnitManager;
-		}
-		return p;
-	}
+	static UnitManager* Get();
 private:
 	Player* player = nullptr;
 	Enemy* enemy = nullptr;
 public:
-	void SetPlayer(int id) {
-		if (player != nullptr)
-		{
-			delete player;
-			player = nullptr;
-		}
-		player = new Player(playerInfo[id-1][0], playerInfo[id - 1][1], playerInfo[id - 1][2], playerInfo[id - 1][3], playerInfo[id - 1][4], playerInfo[id - 1][5], playerInfo[id - 1][6], id);
-	}
+	void SetPlayer(int id);
 
-	Player& returnPlayer()
-	{
-		return *player;
-	}
+	Player& returnPlayer();
 
-	void NextRound(Player& clone)
-	{
+	void NextRound(Player& clone);
 
-		player = new Player(clone);
-		delete &clone;
-	}
-
-	void SetEnemy(int round)
-	{
-		if (enemy != nullptr)
-		{
-			delete enemy;
-			enemy = nullptr;
-		}
-		enemy = new Enemy(enemyInfo[round][0], enemyInfo[round][1], enemyInfo[round][2], enemyInfo[round][3], enemyInfo[round][4], enemyInfo[round][5], enemyInfo[round][6]);
-	}
-	Enemy& returnEnemy()
-	{
-		return *enemy;
-	}
+	void SetEnemy(int round);
+	Enemy& returnEnemy();
 	
 };
-
-UnitManager* UnitManager::p = nullptr;
+#endif

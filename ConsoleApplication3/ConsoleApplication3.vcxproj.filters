@@ -24,6 +24,15 @@
     <ClCompile Include="적.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="유닛.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Caculate.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="유닛메니저.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="유닛.h">
@@ -51,6 +60,9 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="뮤직.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Caculate.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

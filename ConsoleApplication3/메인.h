@@ -224,7 +224,13 @@ void PlayerTurn()
 						pair<bool, int> p = (UnitManager::Get()->returnPlayer().*Data::skillSet[Data::button_x - 1])(UnitManager::Get()->returnEnemy());
 						if (p.first == 0)
 						{
-							if (UnitManager::Get()->returnPlayer().ReturnHP() - p.second >= 0)
+							if (p.second < 0)
+							{
+								Data::alertCount = 6;
+								UnitManager::Get()->returnPlayer().SetAlertCount() = 0;
+								Data::keyInput = 1;
+							}
+							else if (UnitManager::Get()->returnPlayer().ReturnHP() - p.second >= 0)
 							{
 								Data::alertCount = -1;
 								UnitManager::Get()->returnPlayer().SetAlertCount() = Data::alertCount;
@@ -482,7 +488,7 @@ void KeyValue()
 					Data::skillSet[1] = &Player::ignite;
 					Data::skillSet[2] = &Player::IceMagic;
 					Data::skillSet[3] = &Player::PutOnBarrier;
-					Data::skillSet[4] = &Player::Intel;
+					Data::skillSet[4] = &Player::RaiseIntel;
 					break;
 				case 3:
 					Data::skillSet[0] = &Player::DamageAbsorb;

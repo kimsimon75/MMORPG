@@ -18,48 +18,54 @@
     <ClCompile Include="ConsoleApplication3.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="플레이어.cpp">
+    <ClCompile Include="player.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="적.cpp">
+    <ClCompile Include="enemy.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="유닛.cpp">
+    <ClCompile Include="unit.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Caculate.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="유닛메니저.cpp">
+    <ClCompile Include="unitmanager.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="text.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="music.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="유닛.h">
+    <ClInclude Include="unit.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="렌더.h">
+    <ClInclude Include="render.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="텍스트.h">
+    <ClInclude Include="text.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="텍스트메니저.h">
+    <ClInclude Include="textmanager.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="유닛메니저.h">
+    <ClInclude Include="unitmanager.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="플레이어.h">
+    <ClInclude Include="player.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="적.h">
+    <ClInclude Include="enemy.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="메인.h">
+    <ClInclude Include="main.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="뮤직.h">
+    <ClInclude Include="music.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Caculate.h">

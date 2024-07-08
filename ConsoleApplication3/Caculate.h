@@ -41,7 +41,7 @@ char peek(Stack* s);
 void infixToPostfix(char* infix, char* postfix);
 
 // 후위 표기법을 계산
-int calculate(char* postfix);
+double Calculate(char* postfix);
 
-const char* Calculate(const char* string);
+const char* CalculateEx(const char* string);
 

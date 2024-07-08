@@ -129,22 +129,24 @@
   <ItemGroup>
     <ClCompile Include="Caculate.cpp" />
     <ClCompile Include="ConsoleApplication3.cpp" />
-    <ClCompile Include="유닛.cpp" />
-    <ClCompile Include="유닛메니저.cpp" />
-    <ClCompile Include="적.cpp" />
-    <ClCompile Include="플레이어.cpp" />
+    <ClCompile Include="music.cpp" />
+    <ClCompile Include="unit.cpp" />
+    <ClCompile Include="unitmanager.cpp" />
+    <ClCompile Include="enemy.cpp" />
+    <ClCompile Include="text.cpp" />
+    <ClCompile Include="player.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Caculate.h" />
-    <ClInclude Include="렌더.h" />
-    <ClInclude Include="메인.h" />
-    <ClInclude Include="뮤직.h" />
-    <ClInclude Include="유닛.h" />
-    <ClInclude Include="유닛메니저.h" />
-    <ClInclude Include="적.h" />
-    <ClInclude Include="텍스트.h" />
-    <ClInclude Include="텍스트메니저.h" />
-    <ClInclude Include="플레이어.h" />
+    <ClInclude Include="render.h" />
+    <ClInclude Include="main.h" />
+    <ClInclude Include="music.h" />
+    <ClInclude Include="unit.h" />
+    <ClInclude Include="unitmanager.h" />
+    <ClInclude Include="enemy.h" />
+    <ClInclude Include="text.h" />
+    <ClInclude Include="textmanager.h" />
+    <ClInclude Include="player.h" />
   </ItemGroup>
   <ItemGroup>
     <Media Include="배달의민족 - 미래도시라솔파.mp3" />

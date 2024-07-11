@@ -1,5 +1,13 @@
 # MMORPG
 
+// 조작키
+
+화살표 : 선택 버튼 변경
+
+스페이스바 : 버튼 선택
+
+ESC : 이전으로
+
 Thanks to, Mike Koenig
 From: http://soundbible.com/1035-Zombie-Moan.html
 

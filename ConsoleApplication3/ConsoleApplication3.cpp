@@ -10,8 +10,6 @@ void Render()
 {
 	Data::keyInput = 0;
 	Map();
-	if(Data::state==2)
-		UnitManager::Get()->returnPlayer().SetAttack(Data::puttingItemSlot);
 	if (!Data::itemOn && !Data::weaponOn)
 	{
 		Button();
@@ -49,6 +47,8 @@ void Gameplay()
 	mciSendCommand(dwID, MCI_SEEK, MCI_SEEK_TO_START, (DWORD_PTR)(LPVOID)NULL);
 	while (UnitManager::Get()->returnPlayer().AP() >= 100 || UnitManager::Get()->returnEnemy().AP() >= 100)
 	{
+		if (gameover)
+			break;
 		if (UnitManager::Get()->returnPlayer().AP() >= UnitManager::Get()->returnEnemy().AP())
 		{
 			
@@ -82,14 +82,14 @@ void Gameplay()
 			UnitManager::Get()->returnEnemy().TurnReturn() = true;
 			Data::button_x = 0;
 			Render();
-			Sleep(1000);
+			Sleep(500);
 			EnemyTurn();
 			Render();
 			if (UnitManager::Get()->returnPlayer().AP() >= 100)
 				Render();
 		}
-		rewind(stdin);
 	}
+	if(!gameover)
 	EndTurn();
 
 }
@@ -107,6 +107,9 @@ int main(){
 
 	//playingBgm();
 	TextManager::Get()->SetRenderer(STORY);
+
+	Data::weaponSkill[0] = &Player::ShieldBash;
+	Data::weaponSkill[1] = &Player::Bite;
 	
 	while(1)
 	{
@@ -119,6 +122,7 @@ int main(){
 			if(Data::state!=2) KeyValue();
 			else Gameplay();
 		}
+
 		Map();
 		Warning::GameOver();
 		ResetGame();

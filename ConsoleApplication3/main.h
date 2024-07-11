@@ -33,13 +33,35 @@ void GetItem()
 		Data::itemSlot[Data::itemSlot_x++] = 1;
 		break;
 	case 1:
-		if (random < 50)
 			Data::itemSlot[Data::itemSlot_x++] = 2;
 		break;
 	}
 	if(pre!=Data::itemSlot_x)
 	{
 		Data::alertCount = 7;
+		warning.Alert();
+	}
+}
+void GetWeapon()
+{
+	random_device rd;
+	mt19937 gen(rd());
+	uniform_int_distribution<int> dis(0, 99);
+	Warning warning;
+	int random = dis(gen);
+	int pre = Data::weaponSlot_x;
+	switch (Data::gameRound)
+	{
+	case 0:
+		Data::weaponSlot[Data::weaponSlot_x++] = 1;
+		break;
+	case 1:
+			Data::weaponSlot[Data::weaponSlot_x++] = 2;
+		break;
+	}
+	if (pre != Data::weaponSlot_x)
+	{
+		Data::alertCount = 8;
 		warning.Alert();
 	}
 }
@@ -50,6 +72,17 @@ void SwapItem()
 	Data::itemSlot[Data::item_x-1] = Data::puttingItemSlot[Data::puttingItem_x-1];
 	Data::puttingItemSlot[Data::puttingItem_x-1] = swap;
 }
+void SwapWeapon()
+{
+	
+	char swap = Data::weaponSlot[Data::weapon_x - 1];
+	Data::weaponSlot[Data::weapon_x - 1] = Data::puttingWeaponSlot[Data::puttingWeapon_x - 1];
+	Data::puttingWeaponSlot[Data::puttingWeapon_x - 1] = swap;
+	if (Data::puttingWeaponSlot[Data::puttingWeapon_x - 1] - 1 != -1)
+		Data::skillSet[Data::skillCount - 3 + Data::puttingWeapon_x - 1] = Data::weaponSkill[Data::puttingWeaponSlot[Data::puttingWeapon_x - 1] - 1];
+	else
+		Data::skillSet[Data::skillCount - 3 + Data::puttingWeapon_x - 1] = nullptr;
+}
 
 void NextRound()
 {
@@ -57,10 +90,12 @@ void NextRound()
 	UnitManager::Get()->returnEnemy().ReturnHP() = 0;
 	TextManager::Get()->Update();
 	GetItem();
+	GetWeapon();
   	UnitManager::Get()->SetEnemy(++Data::gameRound);
 
  	UnitManager::Get()->NextRound(UnitManager::Get()->returnPlayer()); 
 	UnitManager::Get()->returnPlayer().GameRound() = Data::gameRound;
+	UnitManager::Get()->returnPlayer().SetAbility(Data::puttingItemSlot, Data::puttingWeaponSlot);
 }
 
 void ResetGame()
@@ -75,7 +110,12 @@ void ResetGame()
 		Data::skillCount = 0;
 		fill_n(Data::itemSlot, sizeof(Data::itemSlot) / sizeof(Data::itemSlot[0]), 0);
 		fill_n(Data::puttingItemSlot, sizeof(Data::puttingItemSlot) / sizeof(Data::puttingItemSlot[0]), 0);
+		fill_n(Data::weaponSlot, sizeof(Data::weaponSlot) / sizeof(Data::weaponSlot[0]), 0);
+		fill_n(Data::puttingWeaponSlot, sizeof(Data::puttingWeaponSlot) / sizeof(Data::puttingWeaponSlot[0]), 0);
+		Data::weaponSlot_x = 0;
+		Data::weapon_x = 0;
 		Data::itemSlot_x = 0;
+		Data::maxCount = 4;
 	}
 	Data::button_x = 1;
 	Data::state = 0;
@@ -105,6 +145,9 @@ void EnemyTurn()
 				}
 				else
 					UnitManager::Get()->returnEnemy().basic_Attack(UnitManager::Get()->returnPlayer());
+
+				if (UnitManager::Get()->returnPlayer().ReturnHP() <= 0)
+					gameover = true;
 				if (!UnitManager::Get()->returnPlayer().GetDamage(false))
 					UnitManager::Get()->returnPlayer().WTF() = true;
 			}
@@ -159,14 +202,17 @@ void EndTurn()
 
 	if (UnitManager::Get()->returnPlayer().ReturnHP() <= 0)
 		gameover = true;
-
-	if (UnitManager::Get()->returnPlayer().IntelCool())
+	if (!gameover)
 	{
-		--UnitManager::Get()->returnPlayer().IntelCool();
-	}
 
-	UnitManager::Get()->returnEnemy().Restoring();
-	UnitManager::Get()->returnPlayer().Restoring();
+		if (UnitManager::Get()->returnPlayer().IntelCool())
+		{
+			--UnitManager::Get()->returnPlayer().IntelCool();
+		}
+
+		UnitManager::Get()->returnEnemy().Restoring();
+		UnitManager::Get()->returnPlayer().Restoring();
+	}
 }
 
 void PlayerTurn()
@@ -179,12 +225,17 @@ void PlayerTurn()
 			if (Data::state <= 2)
 			{
 				Beep(BEEPSOUND, 50);
-				(Data::setItem ? Data::item_x : (Data::itemOn ? Data::puttingItem_x : Data::button_x))--;
+				if (Data::weaponOn)
+					(Data::setWeapon ? Data::weapon_x : Data::puttingWeapon_x)--;
+				else	
+					(Data::itemOn ? (Data::setItem ? Data::item_x : Data::puttingItem_x) : Data::button_x)--;
 				if (Data::button_x < ((Data::alertCount == 1) ? 2 : 1))
 					Data::button_x = (Data::alertCount == 1) ? 3 : ((Data::skillOn) ? Data::skillCount : Data::maxCount);
 
 				if (Data::puttingItem_x < 1) Data::puttingItem_x = 6;
+				if (Data::puttingWeapon_x < 1) Data::puttingWeapon_x = 1;
 				if (Data::item_x == 10 || Data::item_x == 20 || Data::item_x == 0) Data::item_x++;
+				if (Data::weapon_x == 10 || Data::weapon_x == 20 || Data::weapon_x == 0) Data::weapon_x++;
 
 				if (Data::Data::state == 1)
 				{
@@ -206,12 +257,18 @@ void PlayerTurn()
 			Data::keyInput = 1;
 			if (Data::state <= 2)
 			{
-				(Data::setItem ? Data::item_x : (Data::itemOn ? Data::puttingItem_x : Data::button_x))++;
+				if (Data::weaponOn)
+					(Data::setWeapon ? Data::weapon_x : Data::puttingWeapon_x)++;
+				else
+					(Data::itemOn ? (Data::setItem ? Data::item_x : Data::puttingItem_x) : Data::button_x)++;
 				if (Data::button_x > ((Data::alertCount == 1) ? 3 : ((Data::skillOn) ? Data::skillCount : Data::maxCount)))
 					Data::button_x = (Data::alertCount == 1) ? 2 : 1;
-				if (Data::puttingItem_x > 6)
-					Data::puttingItem_x = 1;
-				if (Data::item_x == 11 || Data::item_x == 21 || Data::item_x == 31)	Data::item_x--;
+				if (Data::puttingItem_x > 6)Data::puttingItem_x = 1;
+				if (Data::puttingWeapon_x > 2) Data::puttingWeapon_x = 2;
+
+				if (Data::item_x == 11 || Data::item_x == 21 || Data::item_x == 31 || Data::item_x > Data::itemSlot_x)	Data::item_x--;
+				if (Data::weapon_x == 11 || Data::weapon_x == 21 || Data::weapon_x == 31 || Data::weapon_x > Data::weaponSlot_x)Data::weapon_x--;
+
 				if (Data::state == 1)
 				{
 					UnitManager::Get()->SetPlayer(Data::button_x);
@@ -231,7 +288,7 @@ void PlayerTurn()
 		Data::currentCount = Data::button_x - 1;
 	}
 
-	if (Data::setItem)
+	if (Data::setItem || Data::setWeapon)
 		if (GetAsyncKeyState(VK_DOWN) & 0x8000)
 		{
 			if (downKey)
@@ -239,16 +296,25 @@ void PlayerTurn()
 				Beep(BEEPSOUND, 50);
 				Data::keyInput = 1;
 
-				Data::item_x += 10;
-				if (Data::item_x > 30)
-					Data::item_x -= 10;
+				if (Data::itemOn)
+				{
+					Data::item_x += 10;
+					if (Data::item_x > Data::itemSlot_x)
+						Data::item_x -= 10;
+				}
+				else
+				{
+					Data::weapon_x += 10;
+					if (Data::weapon_x > Data::weaponSlot_x)
+						Data::weapon_x -= 10;
+				}
 				downKey = false;
 			}
 
 		}
 		else downKey = true;
 
-	if (Data::setItem)
+	if (Data::setItem || Data::setWeapon)
 		if (GetAsyncKeyState(VK_UP) & 0x8000)
 		{
 			if (upKey)
@@ -256,9 +322,18 @@ void PlayerTurn()
 				Beep(BEEPSOUND, 50);
 				Data::keyInput = 1;
 
-				Data::item_x -= 10;
-				if (Data::item_x < 0)
-					Data::item_x += 10;
+				if(Data::setItem)
+				{
+					Data::item_x -= 10;
+					if (Data::item_x < 0)
+						Data::item_x += 10;
+				}
+				else
+				{
+					Data::weapon_x -= 10;
+					if (Data::weapon_x < 0)
+						Data::weapon_x += 10;
+				}
 				upKey = false;
 			}
 
@@ -283,12 +358,23 @@ void PlayerTurn()
 					break;
 				}
 			}
+			else if (Data::setWeapon)
+			{
+				stopTheGame = true;
+				SwapWeapon();
+				UnitManager::Get()->returnPlayer().SetAbility(Data::puttingItemSlot, Data::puttingWeaponSlot);
+			}
+			else if (Data::weaponOn)
+			{
+				stopTheGame = true;
+				Data::setWeapon = true;
+				Data::weapon_x = 1;
+			}
 			else if (Data::setItem)
 			{
 				stopTheGame = true;
-				Data::setItem = true;
-				if (Data::itemSlot[Data::item_x-1])
-					SwapItem();
+				SwapItem();
+				UnitManager::Get()->returnPlayer().SetAbility(Data::puttingItemSlot, Data::puttingWeaponSlot);
 			}
 			else if (Data::itemOn)
 			{
@@ -303,8 +389,9 @@ void PlayerTurn()
 					if (Data::skillCount == Data::button_x)
 					{
 						stopTheGame = true;
+						Data::skillOn = false;
 					}
-					else
+					else if(Data::skillSet[Data::button_x-1] != nullptr)
 					{
 						pair<bool, int> p = (UnitManager::Get()->returnPlayer().*Data::skillSet[Data::button_x - 1])(UnitManager::Get()->returnEnemy());
 						if (p.first == 0)
@@ -365,8 +452,15 @@ void PlayerTurn()
 								Data::keyInput = 1;
 							}
 						}
+						Data::skillOn = false;
 					}
-					Data::skillOn = false;
+					else
+					{
+						stopTheGame = true;
+						Data::alertCount = 9;
+						Warning warning;
+						warning.Alert();
+					}
 				}
 				else
 					switch (Data::button_x)
@@ -381,14 +475,16 @@ void PlayerTurn()
 					case 3:
 						stopTheGame = true;
 						Data::itemOn = true;
-						Data::item_x = 0;
+						Data::item_x = -1;
 						Data::puttingItem_x = 1;
 						TextManager::Get()->SetRenderer(ITEM);
 						break;
 					case 4:
 						stopTheGame = true;
 						Data::weaponOn = true;
-						TextManager::Get()->SetRenderer(ITEM);
+						Data::weapon_x = -1;
+						Data::puttingWeapon_x = 1;
+						TextManager::Get()->SetRenderer(WEAPON);
 					case 5:
 						stopTheGame = true;
 					default:
@@ -403,6 +499,8 @@ void PlayerTurn()
 			{
 				UnitManager::Get()->returnPlayer().TurnReturn() = false;
 				UnitManager::Get()->returnPlayer().AP() -= 100;
+				UnitManager::Get()->returnPlayer().SetAbility(Data::puttingItemSlot, Data::puttingWeaponSlot);
+				UnitManager::Get()->returnPlayer().BuffRemove();
 				if (!UnitManager::Get()->returnEnemy().GetDamage(false) && !UnitManager::Get()->returnEnemy().iced_time()) UnitManager::Get()->returnEnemy().WTF() = true;
 
 				if (UnitManager::Get()->returnEnemy().GetDamage(false))
@@ -411,6 +509,7 @@ void PlayerTurn()
 						UnitManager::Get()->returnEnemy().ReturnHP() = 0;
 					if (Data::gameRound == 1)
 						UnitManager::Get()->returnEnemy().DamageUp();
+
 					TextManager::Get()->Update();
 				}
 			}
@@ -418,6 +517,7 @@ void PlayerTurn()
 			Data::button_x = 1;
 			spaceKey = false; 
 	   	} 
+		
 	}
 	else spaceKey = true;
 
@@ -438,21 +538,26 @@ void PlayerTurn()
 				Data::button_x = 1;
 				Data::skillOn = false;
 			}
-			else if (Data::setItem)
+			else if (Data::setWeapon)
 			{
-				Data::setItem = false;
-				Data::item_x = 0;
-			}
-			else if (Data::itemOn)
-			{
-				Data::button_x = 1;
-				Data::itemOn = false;
-				TextManager::Get()->SetRenderer(INGAME);
+				Data::setWeapon = false;
+				Data::weapon_x = -1;
 			}
 			else if (Data::weaponOn)
 			{
 				Data::button_x = 1;
 				Data::weaponOn = false;
+				TextManager::Get()->SetRenderer(INGAME);
+			}
+			else if (Data::setItem)
+			{
+				Data::setItem = false;
+				Data::item_x = -1;
+			}
+			else if (Data::itemOn)
+			{
+				Data::button_x = 1;
+				Data::itemOn = false;
 				TextManager::Get()->SetRenderer(INGAME);
 			}
 			else
@@ -469,17 +574,6 @@ void PlayerTurn()
 	{
 		Data::maxCount++;
 	}  
-
-
-	if (UnitManager::Get()->returnPlayer().PN() != 4)
-	{
-		if (UnitManager::Get()->returnPlayer().IntelCool())
-		{
-			UnitManager::Get()->returnPlayer().SetIntel(50);
-		}
-		else
-			UnitManager::Get()->returnPlayer().SetIntel(0);
-	}
 
 }
 
@@ -575,7 +669,11 @@ void KeyValue()
 				Data::skillCount = 0;
 
 				while (strlen(skills[Data::button_x - 1][Data::skillCount])) { ++Data::skillCount; }
+				Data::skillCount += 3;
 				Data::skillSet = new Func[Data::skillCount - 1];
+
+				for (int i = 0; i < Data::skillCount - 1; i++)
+					Data::skillSet[i] = nullptr;
 
 				switch (Data::button_x)
 				{

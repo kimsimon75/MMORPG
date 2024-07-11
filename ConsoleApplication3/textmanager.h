@@ -38,6 +38,10 @@ public:
 			break;
 		case ITEM:
 			text = new Item;
+			break;
+		case WEAPON:
+			text = new Weapon;
+			break;
 		}
 	}
 

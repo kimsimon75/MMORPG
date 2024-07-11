@@ -21,9 +21,15 @@ struct Data {
 
 	static int button_x;
 	static int item_x;
+	static int weapon_x;
 	static char puttingItemSlot[6];
 	static int puttingItem_x;
-	static bool setItem;
+	static char puttingWeaponSlot[2];
+	static int puttingWeapon_x;
+	static char itemSlot[30];
+	static int itemSlot_x;
+	static char weaponSlot[30];
+	static int weaponSlot_x;
 	static int state;
 	static int alertCount;
 	static short keyInput;
@@ -32,19 +38,26 @@ struct Data {
 	static int skillCount;
 	static int gameRound;
 	static bool skillOn;
+	static bool setItem;
 	static bool itemOn;
+	static bool setWeapon;
 	static bool weaponOn;
-	static char itemSlot[30];
-	static int itemSlot_x;
 	static Func* skillSet;
+	static Func weaponSkill[20];
 };
 
 COORD Data::pos{ 0,0 };
 int Data::button_x = 1;
-int Data::item_x = 0;
+int Data::item_x = -1;
+int Data::weapon_x = -1;
 char Data::puttingItemSlot[6] = {};
 int Data::puttingItem_x = 1;
-bool Data::setItem = false;
+char Data::puttingWeaponSlot[2] = {};
+int Data::puttingWeapon_x = 0;
+char Data::itemSlot[30] = {};
+int Data::itemSlot_x = 0;
+char Data::weaponSlot[30] = {};
+int Data::weaponSlot_x = 0;
 int Data::state = 0;
 int Data::alertCount = 0;
 short Data::keyInput = 1;
@@ -53,11 +66,12 @@ short Data::currentCount = 0;
 int Data::skillCount = 0;
 int Data::gameRound = 0;
 bool Data::skillOn = false;
+bool Data::setItem = false;
 bool Data::itemOn = false;
+bool Data::setWeapon = false;
 bool Data::weaponOn = false;
-char Data::itemSlot[30] = {};
-int Data::itemSlot_x = 0;
 Func* Data::skillSet = nullptr;
+Func Data::weaponSkill[20] = {};
 
 void Map();
 void Status();
@@ -321,13 +335,14 @@ class Item : public Text {
 			{
 				Data::pos.X = 4 + j * 10;
 				Data::pos.Y = 2 + k * 5;
-				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), k * 10 + j == Data::item_x-1 ? 14 : 15);
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), k * 10 + j == Data::item_x - 1 ? 10 : (k * 10 + j < Data::itemSlot_x ? 14 : 15));
 				for (int i = 0; i < 3; i++)
 				{
 					SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
 					printf("%s", itemBox[i]);
 					Data::pos.Y += 1;	
 				}
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),15);
 				if (strlen(itemForm[Data::itemSlot[j + k * 10]]))
 				{
 					Data::pos.X = 6 + j * 10;
@@ -339,11 +354,12 @@ class Item : public Text {
 			}
 		}
 
+
 		for (int i = 0; i < 6; i++)
 		{
 			Data::pos.X = 24 + i * 10;
 			Data::pos.Y = 19;
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), i == Data::puttingItem_x - 1 ? Data::setItem ? 12 : 14 : 15);
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), i == Data::puttingItem_x - 1 ? Data::setItem ? 12 : 10 : 15);
 			for (int j = 0; j < 3; j++)
 			{
 				SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
@@ -351,6 +367,7 @@ class Item : public Text {
 				Data::pos.Y += 1;
 			}
 
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
 			Data::pos.X = 26 + i * 10;
 			Data::pos.Y = 20;
 			SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
@@ -360,15 +377,66 @@ class Item : public Text {
 	}
 };
 
+class Weapon : public Text {
+	void Render()
+	{
+		for (int k = 0; k < 3; k++)
+		{
+			for (int j = 0; j < 10; j++)
+			{
+				Data::pos.X = 4 + j * 10;
+				Data::pos.Y = 2 + k * 5;
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), k * 10 + j == Data::weapon_x - 1 ? 10 : (k * 10 + j < Data::weaponSlot_x ? 14 : 15));
+				for (int i = 0; i < 3; i++)
+				{
+					SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+					printf("%s", itemBox[i]);
+					Data::pos.Y += 1;
+				}
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
+				if (strlen(weaponForm[Data::weaponSlot[j + k * 10]]))
+				{
+					Data::pos.X = 6 + j * 10;
+					Data::pos.Y = 3 + k * 5;
+					SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+					printf("%s", weaponForm[Data::weaponSlot[j + k * 10]]);
+				}
+
+			}
+		}
+
+		for (int i = 0; i < 2; i++)
+		{
+			Data::pos.X = 44 + i * 10;
+			Data::pos.Y = 19;
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), i == Data::puttingWeapon_x - 1 ? Data::setWeapon ? 12 : 10 : 15);
+			for (int j = 0; j < 3; j++)
+			{
+				SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+				printf("%s", itemBox[j]);
+				Data::pos.Y += 1;
+			}
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
+			Data::pos.X = 46 + i * 10;
+			Data::pos.Y = 20;
+			SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+			printf("%s", weaponForm[Data::puttingWeaponSlot[i]]);
+		}
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
+	}
+};
+
 static void Map()
 	{
 		system("cls");
-		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15); 
 		
-		for (int i = 0; i < 40; i++)
-		{
-			printf("%s\n", Data::itemOn ? itemMap[i] : map[i]);
-		}
+		if (Data::itemOn || Data::weaponOn)
+			for (int i = 0; i < 40; i++)
+				printf("%s", itemMap[i]);
+		else
+			for (int i = 0; i < 40; i++)
+				printf("%s\n", map[i]);
 	}
 
 static void Button()
@@ -408,14 +476,13 @@ static void Button()
 						SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
 						printf("%s\n", button[j]);
 					}
-				}
+				} 
 				if (Data::state == 2 && UnitManager::Get()->returnPlayer().GetDamage(false))
 					Sleep(100);
 			}
 		if (Data::state == 2 && UnitManager::Get()->returnPlayer().GetDamage(true))
 		{
 			mciSendCommand(dwID, MCI_SEEK, MCI_SEEK_TO_START, (DWORD_PTR)(LPVOID)NULL);
-			Sleep(100);
 		}
 
 		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
@@ -434,10 +501,10 @@ static void Play()
 
 				int start = 8 + 24 * ((Data::alertCount == 1) ? i : (i - init));
 				int end = 24 + 24 * ((Data::alertCount == 1) ? i : (i - init));
-				int length = (int)strlen((Data::alertCount == 1) ? alert[0][i] : ((Data::skillOn) ? skills[UnitManager::Get()->returnPlayer().PN() - 1][i] : text[Data::state][i]));
-				Text_Align::text_center(start, end, length);
+				int length = (int)strlen((Data::alertCount == 1) ? alert[0][i] : ((Data::skillOn) ? i == Data::skillCount - 3 ? Data::puttingWeaponSlot[0] ? weaponSkill[Data::puttingWeaponSlot[0] - 1] : "무기 1" : i == Data::skillCount - 2 ? Data::puttingWeaponSlot[1] ? weaponSkill[Data::puttingWeaponSlot[1] - 1] : "무기 2" : (i == Data::skillCount - 1 ? "뒤로가기" : skills[UnitManager::Get()->returnPlayer().PN() - 1][i]) : text[Data::state][i]));
+				Text_Align::text_center(start, end, length); 
 				SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
-				printf("%s", (Data::alertCount == 1) ? alert[0][i] : ((Data::skillOn) ? skills[UnitManager::Get()->returnPlayer().PN() - 1][i] : text[Data::state][i]));
+				printf("%s", (Data::alertCount == 1) ? alert[0][i] : ((Data::skillOn) ? i == Data::skillCount - 3 ? Data::puttingWeaponSlot[0] ? weaponSkill[Data::puttingWeaponSlot[0]-1] : "무기 1" : i == Data::skillCount - 2 ? Data::puttingWeaponSlot[1] ? weaponSkill[Data::puttingWeaponSlot[1]-1] : "무기 2" : (i == Data::skillCount - 1 ? "뒤로가기" : skills[UnitManager::Get()->returnPlayer().PN() - 1][i]) : text[Data::state][i]));
 			}
 		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
 
@@ -481,7 +548,7 @@ static void Play()
 static void Status()
 {
 
-	if(!Data::itemOn)
+	if(!Data::itemOn && !Data::weaponOn)
 	{
 
 		if (Data::state == 2 && UnitManager::Get()->returnEnemy().PoisonTime())
@@ -553,7 +620,7 @@ static void Status()
 	Data::pos.X = 60 + Data::state * 10;
 	Data::pos.Y = 12;
 
-	if (Data::itemOn)
+	if (Data::itemOn || Data::weaponOn)
 	{
 		Data::pos.X = 4;
 		Data::pos.Y = 23;
@@ -595,44 +662,68 @@ static void ItemInformation()
 	Data::pos.X = 30;
 	Data::pos.Y = 25;
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
-	printf("*아이템 정보*"); 
 
-	Data::pos.Y += 2;
-	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
-	if (Data::setItem)
+	if (Data::itemOn)
 	{
-		for(int i=0;strlen(itemInfo[Data::itemSlot[Data::item_x - 1]][i]);i++)
-		{
-			printf("%s", itemInfo[Data::itemSlot[Data::item_x - 1]][i]);
-			Data::pos.Y += 2;
-			SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
-		}
+		printf("*아이템 정보*");
+		if (Data::setItem)
+			for (int i = 0; strlen(itemInfo[Data::itemSlot[Data::item_x - 1]][i]); i++)
+			{
+				Data::pos.Y += 2;
+				SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+				printf("%s", itemInfo[Data::itemSlot[Data::item_x - 1]][i]);
+			}
+		else
+			for (int i = 0; strlen(itemInfo[Data::puttingItemSlot[Data::puttingItem_x - 1]][i]); i++)
+			{
+				Data::pos.Y += 2;
+				SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+				printf("%s", itemInfo[Data::puttingItemSlot[Data::puttingItem_x - 1]][i]);
+			}
 	}
 	else
-		for(int i=0;strlen(itemInfo[Data::puttingItemSlot[Data::puttingItem_x - 1]][i]);i++)
-		{
-			printf("%s", itemInfo[Data::puttingItemSlot[Data::puttingItem_x - 1]][i]);
-			Data::pos.Y += 2;
-			SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
-		}
-
-
+	{
+		printf("*무기 정보*");
+		if (Data::setWeapon)
+			for (int i = 0; strlen(weaponInfo[Data::weaponSlot[Data::weapon_x - 1]][i]); i++)
+			{
+				Data::pos.Y += 2;
+				SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+				printf("%s", weaponInfo[Data::weaponSlot[Data::weapon_x - 1]][i]);
+			}
+		else
+			for (int i = 0; strlen(weaponInfo[Data::puttingWeaponSlot[Data::puttingWeapon_x - 1]][i]); i++)
+			{
+				Data::pos.Y += 2;
+				SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+				printf("%s", weaponInfo[Data::puttingWeaponSlot[Data::puttingWeapon_x - 1]][i]);
+			}
+	}
 }
 
 
 
 static void SkillInformation()
 {
-	for (int i = 0; i < 4; i++) // 설명글
+	if(Data::button_x!=Data::skillCount)
 	{
-		if (strlen(skillinfo[UnitManager::Get()->returnPlayer().PN() - 1][Data::button_x - 1][i]) == 0)
-			break;
-		Data::pos.Y = 2 + i * 2;
-		Text_Align::text_center(skillinfo[UnitManager::Get()->returnPlayer().PN() - 1][Data::button_x - 1][i]);
-		SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
-		printf("%s", skillinfo[UnitManager::Get()->returnPlayer().PN() - 1][Data::button_x - 1][i]);
+		for (int i = 0; i < 4; i++) // 설명글
+		{
+
+			if (strlen((Data::button_x + 2 - Data::skillCount >= 0) ? weapon_Skill_info[Data::puttingWeaponSlot[Data::button_x + 2 - Data::skillCount]][i] : skillinfo[UnitManager::Get()->returnPlayer().PN() - 1][Data::button_x - 1][i]) == 0)
+				break;
+			Data::pos.Y = 2 + i * 2;
+			Text_Align::text_center(Data::button_x + 2 - Data::skillCount >= 0 ? weapon_Skill_info[Data::puttingWeaponSlot[Data::button_x + 2 - Data::skillCount]][i] : skillinfo[UnitManager::Get()->returnPlayer().PN() - 1][Data::button_x - 1][i]);
+			SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
+			printf("%s", Data::button_x + 2 - Data::skillCount >= 0 ? weapon_Skill_info[Data::puttingWeaponSlot[Data::button_x + 2 - Data::skillCount]][i] : skillinfo[UnitManager::Get()->returnPlayer().PN() - 1][Data::button_x - 1][i]);
+		}
+		if (Data::button_x + 2 < Data::skillCount)
+			SkillCoefficient(skillCoefficient[UnitManager::Get()->returnPlayer().PN() - 1][Data::button_x - 1]);
+		else if(Data::puttingWeaponSlot[Data::button_x + 2 - Data::skillCount]-1>=0)
+		{
+			SkillCoefficient(weaponSkillCoefficient[Data::puttingWeaponSlot[Data::button_x + 2 - Data::skillCount]-1]);
+		}
 	}
-	SkillCoefficient(skillCoefficient[UnitManager::Get()->returnPlayer().PN() - 1][Data::button_x - 1]);
 }
 
 
@@ -702,7 +793,7 @@ public:
 			SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);
 			printf("%s", alert[Data::alertCount - 1][0]);
 		}
-		else if (Data::alertCount == 7)
+		else if (Data::alertCount == 7 || Data::alertCount == 8)
 		{
 			int line = 2;
 			Text_Align::line_center(20, 29, 2 * line - 1);
@@ -712,7 +803,7 @@ public:
 
 			Data::pos.Y += 2;
 			char s1[50] = { "*" };
-			strcat(s1, itemName[Data::gameRound]);
+			strcat(s1, Data::alertCount == 7 ? itemName[Data::gameRound] : weaponName[Data::gameRound]);
 			strcat(s1, "*");
 			Text_Align::text_center(s1);
 			SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Data::pos);

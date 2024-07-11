@@ -26,9 +26,17 @@ protected:
 	int max_mp = 9;
 	int barrier = 10;
 
-	int absorbDamage = 0;
-	int basic_damage = 10;
+	int basic_hp = 0;
+	int basic_mp = 0;
+	int basic_damage = 0;
 	int basic_intelligence = 0;
+	int basic_agility = 0;
+	int basic_armor = 0;
+	int basic_restore = 0;
+
+	int absorbHP = 0;
+	int absorbDamage = 0;
+	int absorbIntelligence = 0;
 	int getDamage = 0;
 	int poison_time = 0;
 	int poison_damage = 12;
@@ -56,6 +64,8 @@ public:
 	int& ReturnMP();
 	int& SetAlertCount();
 
+	void RemoveBarrier(Unit& target, int damage);
+
 	bool GetDamage(bool test);
 
 	int& StunTime();
@@ -82,7 +92,6 @@ public:
 
 	int& IntelCool();
 
-	void SetIntel(int rank);
 
 	int& GetIntelligence();
 
@@ -129,8 +138,8 @@ const int playerInfo[4][7] = { //체력, 마나, 공격력, 지능, 민첩성, 방어도, 체력�
 	20,200,0,200,200,0,0 };
 
 const int enemyInfo[3][7] = {
-	100, 50, 0, 200, 10, 20, 0,
-	200, 0, 30, 0, 80, 10, 0,
-	300, 0, 50, 0, 20, 50, 0,
+	10, 50, 0, 200, 10, 20, 0,
+	20, 0, 30, 0, 80, 10, 0,
+	30, 0, 50, 0, 20, 50, 0,
 };
 

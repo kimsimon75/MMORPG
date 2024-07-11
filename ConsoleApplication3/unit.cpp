@@ -4,16 +4,22 @@
  Unit::Unit(int hp, int mp, int attack, int intelligence, int agility, int armor, int restore)
 {
 	this->max_hp = hp;
-	current_hp = max_hp;
+	current_hp = hp;
+	basic_hp = hp;;
 	this->max_mp = mp;
-	current_mp = max_mp;
+	current_mp = mp;
+	basic_mp = mp;
 	this->attack = attack;
+	basic_damage = attack;
 	this->intelligence = intelligence;
+	basic_intelligence = intelligence;
 	this->agility = agility;
+	basic_agility = agility;
 	this->armor = armor;
+	basic_armor = armor;
 	this->restore = restore;
-	this->basic_damage = attack;
-	this->basic_intelligence = intelligence;
+	basic_restore = restore;
+
 	pre_hp = hp;
 	barrier = 0;
 }
@@ -32,6 +38,16 @@
 {
 	return alertCount;
 }
+
+ void Unit::RemoveBarrier(Unit& target, int damage)
+ {
+	 target.barrier -= damage;
+	 if (target.barrier < 0)
+	 {
+		 target.current_hp += target.barrier;
+		 target.barrier = 0;
+	 }
+ }
 
  bool Unit::GetDamage(bool test)
 {
@@ -127,10 +143,6 @@
 	return intelUpCool;
 }
 
- void Unit::SetIntel(int rank)
-{
-	intelligence = basic_intelligence + rank;
-}
 
  int& Unit::GetIntelligence()
 {
@@ -191,12 +203,7 @@
 	int damage = attack - target.armor;
 	if (damage < 0)
 		damage = 0;
-	target.barrier -= damage;
-	if (target.barrier < 0)
-	{
-		target.current_hp += target.barrier;
-		target.barrier = 0;
-	}
+	RemoveBarrier(target, damage);
 	return make_pair(0, 0);
 }
 
@@ -209,12 +216,7 @@
 		int damage = atoi(CalculateEx(skillCoefficient[0][1]+2)) - target.armor;
 		if (damage < 0)
 			damage = 0;
-		target.barrier -= damage;
-		if (target.barrier < 0)
-		{
-			target.current_hp += target.barrier;
-			target.barrier = 0;
-		}
+		RemoveBarrier(target, damage);
 		stun = 2;
 	}
 }
@@ -230,12 +232,7 @@
 		int damage = atoi(CalculateEx(skillCoefficient[1][0]+2));
 		if (damage < 0)
 			damage = 0;
-		target.barrier -= damage;
-		if (target.barrier < 0)
-		{
-			target.current_hp += target.barrier;
-			target.barrier = 0;
-		}
+		RemoveBarrier(target, damage);
 		current_mp -= mana;
 	}
 	return make_pair(1, mana);
@@ -301,7 +298,7 @@
 		int damage = atoi(CalculateEx(skillCoefficient[2][2] + 2)) - armor;
 		if (damage < 0)
 			damage = 0;
-		target.current_hp -= damage;
+		RemoveBarrier(target, damage);
 		current_mp -= mana;
 	}
 	return make_pair(1, mana);
@@ -344,13 +341,13 @@
 			alertCount = 5;
 		else if (target.intelligence <= intel)
 		{
-			intelligence += target.intelligence;
+			absorbIntelligence += target.intelligence;
 			target.intelligence = 0;
 			current_mp -= mana;
 		}
 		else
 		{
-			intelligence += intel;
+			absorbIntelligence += intel;
 			target.intelligence -= intel;
 			current_mp -= mana;
 		}
@@ -361,12 +358,14 @@
  pair<bool, int> Unit::PowerOfGod(Unit& target)
 {
 	int mana = 150;
-	int damage = atoi(CalculateEx(skillCoefficient[3][1] + 2)) - target.armor;
 	if (alertCount == 0)
 		return make_pair(1, mana);
 	else if (alertCount == -1)
 	{
-		target.current_hp -= damage;
+		int damage = atoi(CalculateEx(skillCoefficient[3][1] + 2)) - target.armor;
+		if (damage < 0)
+			damage = 0;
+		RemoveBarrier(target, damage);
 		current_mp -= mana;
 	}
 	return make_pair(1, mana);

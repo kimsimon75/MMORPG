@@ -8,12 +8,32 @@ class Enemy;
 {
 	this->playerNumber = id;
 	this->current_mp = max_mp;
+	temporaryHP = 0;
+	temporaryMP = 0;
+	temporaryAttack = 0;
+	temporaryIntelligence = 0;
+	temporaryAgility = 0;
+	temporaryArmor = 0;
+	temporaryRestore = 0;
 }
 
- Player::Player(Player& player) : Unit(player.max_hp, player.max_mp, player.basic_damage, player.basic_intelligence, player.agility, player.armor, player.restore)
+ Player::Player(Player& player) : Unit(player.basic_hp, player.basic_mp, player.basic_damage, player.basic_intelligence, player.basic_agility, player.basic_armor, player.basic_restore)
 {
 	playerNumber = player.playerNumber;
+	absorbHP = player.absorbHP;
 	absorbDamage = player.absorbDamage;
+	absorbIntelligence = player.absorbIntelligence;
+	max_hp = basic_hp + absorbHP;
+	current_hp = max_hp;
+
+	temporaryHP = 0;
+	temporaryMP = 0;
+	temporaryAttack = 0;
+	temporaryIntelligence = 0;
+	temporaryAgility = 0;
+	temporaryArmor = 0;
+	temporaryRestore = 0;
+
 	if (player.playerNumber == 4)
 	{
 		basic_intelligence = player.basic_intelligence;
@@ -31,18 +51,75 @@ class Enemy;
 	playerNumber = id;
 }
 
- void Player::SetAttack(const char* item)
-{
-	 if (playerNumber != 3)
-		 attack = basic_damage;
-	 else
-		 attack = basic_damage + absorbDamage;
-	 if (damageUpCool)
-	 {
-		 attack += basic_damage * 0.5;
-		 --damageUpCool;
-	 }
-}
+ void Player::SetAbility(const char* item, const char* weapon)
+ {
+	     max_hp = basic_hp + absorbHP + temporaryHP; 
+
+		 max_mp = basic_mp + temporaryMP;
+
+		 attack = basic_damage + absorbDamage + temporaryAttack;
+
+		 intelligence = basic_intelligence + absorbIntelligence + temporaryIntelligence;
+
+		 agility = basic_agility + temporaryAgility;
+
+		 armor = basic_armor + temporaryArmor;
+
+		 restore = basic_restore + temporaryRestore;
+
+		 if (damageUpCool>0)
+		 {
+			 attack += basic_damage * 0.5;
+		 }
+
+		 if (intelUpCool>0)
+		 {
+			 intelligence += 50;
+		 }
+
+		 for (int i = 0; i < 6; i++)
+		 {
+			 switch (item[i])
+			 {
+			 case 1:
+				 armor += 20;
+				 agility -= 20;
+				 break;
+			 case 2:
+				 intelligence -= 15;
+				 break;
+			 }
+		 }
+
+		 for (int i = 0; i < 2; i++)
+		 {
+			 switch (weapon[i])
+			 {
+			 case 1:
+				 armor += 10;
+				 break;
+			 case 2:
+				 attack += 15;
+				 break;
+			 }
+		 }
+
+		 if (max_mp < 0)
+			 max_mp = 0;
+
+		 if (intelligence < 0)
+			 intelligence = 0;
+
+		 if (agility < 0)
+			 agility = 0;
+
+} 
+
+ void Player::BuffRemove()
+ {
+	 --damageUpCool;
+	 --intelUpCool;
+ };
 
  int& Player::GameRound()
 {
@@ -57,14 +134,18 @@ class Enemy;
 		if (damage > target.current_hp)
 		{
 			max_hp += target.current_hp;
+			absorbHP += target.current_hp;
 			current_hp += target.current_hp;
+			pre_hp = current_hp;
 			target.current_hp = 0;
 		}
 		else
 		{
-			target.current_hp -= damage;
 			max_hp += damage;
+			absorbHP += damage;
 			current_hp += damage;
+			pre_hp = current_hp;
+			target.current_hp -= damage;
 		}
 	}
 	else
@@ -167,4 +248,34 @@ class Enemy;
 	}
 	return make_pair(1, mana);
 }
+
+ pair<bool, int> Player::ShieldBash(Unit& target)
+ {
+	 if (alertCount == 0)
+		 return make_pair(0, 0);
+	 else if (alertCount == -1)
+	 {
+		 int damage = armor * 2 - target.armor;
+		 if (damage < 0)
+			 damage = 0;
+		 RemoveBarrier(target, damage);
+		 temporaryArmor -= 20;
+	 }
+	 return make_pair(2, 0);
+ }
+
+ pair<bool, int> Player::Bite(Unit& target)
+ {
+	 if (alertCount == 0)
+		 return make_pair(0, 0);
+	 else if (alertCount == -1)
+	 {
+		 int damage = attack * 2 - target.armor;
+		 if (damage < 0)
+			 damage = 0;
+		 RemoveBarrier(target, damage);
+		 temporaryAttack -= 10;
+	 }
+	 return make_pair(1, 0);
+ }
 

@@ -49,12 +49,21 @@
 	 }
  }
 
- bool Unit::GetDamage(bool test)
+ bool Unit::GetDamage(bool test,const char* item,Unit* target)
 {
 	if (current_hp < pre_hp)
 	{
+		
 		if (test == true)
+		{
+			if(item!=nullptr)
+			{
+				for (int i = 0; i < 6; i++)
+					if (item[i] == 4)
+						target->current_hp -= (pre_hp - current_hp) * 0.5;
+			}
 			pre_hp = current_hp;
+		}
 		return true;
 	}
 	else

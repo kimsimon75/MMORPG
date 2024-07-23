@@ -8,6 +8,7 @@ class Enemy;
 {
 	this->playerNumber = id;
 	this->current_mp = max_mp;
+
 	temporaryHP = 0;
 	temporaryMP = 0;
 	temporaryAttack = 0;
@@ -24,7 +25,8 @@ class Enemy;
 	absorbDamage = player.absorbDamage;
 	absorbIntelligence = player.absorbIntelligence;
 	max_hp = basic_hp + absorbHP;
-	current_hp = max_hp;
+	current_hp = player.current_hp;
+	pre_hp = current_hp;
 
 	temporaryHP = 0;
 	temporaryMP = 0;
@@ -51,7 +53,7 @@ class Enemy;
 	playerNumber = id;
 }
 
- void Player::SetAbility(const char* item, const char* weapon)
+ void Player::SetAbility(const char* item, const char* weapon, bool* stopTheGame)
  {
 	     max_hp = basic_hp + absorbHP + temporaryHP; 
 
@@ -86,7 +88,21 @@ class Enemy;
 				 agility -= 20;
 				 break;
 			 case 2:
+				 agility += 30;
+				 break;
+			 case 3:
+				 agility += 50;
+				 if(!*stopTheGame)
+				 {
+					 current_hp += -10;
+					 pre_hp = current_hp;
+				 }
+				 break;
+			 case 4:
 				 intelligence -= 15;
+				 break;
+			 case 5:
+				 max_mp += 50;
 				 break;
 			 }
 		 }
@@ -99,7 +115,16 @@ class Enemy;
 				 armor += 10;
 				 break;
 			 case 2:
+				 agility += 15;
+				 break;
+			 case 3:
+				 agility += 30;
+				 break;
+			 case 4:
 				 attack += 15;
+				 break;
+			 case 5:
+				 max_mp += 30;
 				 break;
 			 }
 		 }

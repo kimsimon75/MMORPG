@@ -33,7 +33,7 @@ public:
 
 	void SetPN(int& id);
 
-	void SetAbility(const char* item, const char* weapon);
+	void SetAbility(const char* item, const char* weapon, bool* stopTheGame);
 
 	void BuffRemove();
 

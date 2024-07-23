@@ -127,9 +127,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Buffer.cpp" />
     <ClCompile Include="Caculate.cpp" />
     <ClCompile Include="ConsoleApplication3.cpp" />
     <ClCompile Include="music.cpp" />
+    <ClCompile Include="render.cpp" />
+    <ClCompile Include="textmanager.cpp" />
     <ClCompile Include="unit.cpp" />
     <ClCompile Include="unitmanager.cpp" />
     <ClCompile Include="enemy.cpp" />
@@ -137,6 +140,7 @@
     <ClCompile Include="player.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Buffer.h" />
     <ClInclude Include="Caculate.h" />
     <ClInclude Include="render.h" />
     <ClInclude Include="main.h" />

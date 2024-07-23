@@ -40,14 +40,14 @@ extern const char skillinfo[4][6][4][120];
 extern const char weapon_Skill_info[21][3][120];
 
 extern const char unitInfo[9][15];
-extern const char itemInfo[21][3][120];
-extern const char weaponInfo[21][3][120];
-extern const char asciiArt1[4][30];
-extern const char asciiArt2[20][40];
+extern const char itemInfo[20][4][120];
+extern const char weaponInfo[20][3][120];
+extern const char asciiArt1[4][34];
+extern const char asciiArt2[20][50];
 extern const char story[8][123];
 extern const char howToPlay[][123];
 extern const char unit[4][4][142];
 
-extern const char enemy[4][4][142];
+extern const char enemy[20][4][142];
 
 extern const char alert[9][5][142];

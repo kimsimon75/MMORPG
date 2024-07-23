@@ -6,33 +6,8 @@
 
 bool nextTurn = false;
 
-void Render()
-{
-	Data::keyInput = 0;
-	Map();
-	if (!Data::itemOn && !Data::weaponOn)
-	{
-		Button();
-		TextManager::Get()->Update();
-		Play();
-		if (Data::state >= 1 && Data::state < 3)
-			Status();
-	}
-	else
-	{
-		TextManager::Get()->Update();
-		Status();
-		ItemInformation();
-	}
 
 
-		if (Data::alertCount)
-			Warning::Alert();
-		else if (Data::skillOn)
-			SkillInformation();
-
-
-}
 
 void Gameplay()
 {
@@ -58,7 +33,6 @@ void Gameplay()
 					UnitManager::Get()->returnPlayer().AP() -= 100;
 					UnitManager::Get()->returnEnemy().WTF() = true;
 					Sleep(1000);
-					Data::keyInput = 1;
 				}
 				else 
 				{
@@ -66,11 +40,10 @@ void Gameplay()
 					{
 						UnitManager::Get()->returnPlayer().TurnReturn() = true;
 						Data::button_x = 1;
-						Data::keyInput = 1;
 					}
+					Render();
 					PlayerTurn();
 				}
-				if (Data::keyInput)
 					Render();
 
 				if (UnitManager::Get()->returnEnemy().ReturnHP() <= 0)
@@ -87,6 +60,7 @@ void Gameplay()
 			Render();
 			if (UnitManager::Get()->returnPlayer().AP() >= 100)
 				Render();
+			while (_kbhit())_getch();
 		}
 	}
 	if(!gameover)
@@ -105,21 +79,20 @@ int main(){
 	cursorInfo.dwSize = 1;
 	SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cursorInfo);
 
-	//playingBgm();
+	playingBgm();
 	TextManager::Get()->SetRenderer(STORY);
 
 	Data::weaponSkill[0] = &Player::ShieldBash;
 	Data::weaponSkill[1] = &Player::Bite;
+	InitBuffer();
 	
 	while(1)
 	{
 		while (!gameover)
 		{
-			if (Data::keyInput)
-			{
- 				Render();
-			}
-			if(Data::state!=2) KeyValue();
+ 			Render();		
+
+			if (Data::state != 2) KeyValue();
 			else Gameplay();
 		}
 
